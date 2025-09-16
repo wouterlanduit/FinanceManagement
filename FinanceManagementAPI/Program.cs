@@ -1,6 +1,14 @@
+using FinanceManagementAPI.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// TODO create config file
+var connectionString = builder.Configuration.GetConnectionString("FinanacesDb") ?? "Data source=Finances.db";
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -11,6 +19,13 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Finances",
         Version = "v1"
     });
+});
+
+builder.Services.AddSqlite<FinanceManagementDb>(connectionString);
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
 var app = builder.Build();
@@ -24,5 +39,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapGet("/", () => "Hello World!");
+
+var sourceGroup = app.MapGroup("/sources/");
+sourceGroup.MapGet("/", async (FinanceManagementDb db) => await db.Sources.ToListAsync());
+sourceGroup.MapGet("/{id}", async ([FromRoute]int id, [FromServices]FinanceManagementDb db) => await db.Sources.FindAsync(id));
+sourceGroup.MapPost("/", async (Source source, FinanceManagementDb db) =>
+{
+    db.Sources.Add(source);
+    await db.SaveChangesAsync();
+
+    return Results.Created("test", source);
+});
 
 app.Run();
