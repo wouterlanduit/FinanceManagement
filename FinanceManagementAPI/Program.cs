@@ -4,11 +4,12 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // TODO create config file
-var connectionString = builder.Configuration.GetConnectionString("FinanacesDb") ?? "Data source=Finances.db";
+var connectionString = builder.Configuration.GetConnectionString("FinancesDb") ?? "Data source=Finances.db";
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -30,25 +31,82 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
+//app.UseStatusCodePages();
 if (app.Environment.IsDevelopment())
 {
+    //app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(c => {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Finanace Management API v1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Finance Management API v1");
     });
 }
 
-app.MapGet("/", () => "Hello World!");
 
 var sourceGroup = app.MapGroup("/sources/");
 sourceGroup.MapGet("/", async (FinanceManagementDb db) => await db.Sources.ToListAsync());
 sourceGroup.MapGet("/{id}", async ([FromRoute]int id, [FromServices]FinanceManagementDb db) => await db.Sources.FindAsync(id));
 sourceGroup.MapPost("/", async (Source source, FinanceManagementDb db) =>
 {
-    db.Sources.Add(source);
+    IResult result = TypedResults.BadRequest();
+
+    try
+    {
+        db.Sources.Add(source);
+        await db.SaveChangesAsync();
+        result = TypedResults.Created($"/sources/{source.Id}", source);
+    }
+    catch
+    {
+        result = TypedResults.StatusCode(StatusCodes.Status500InternalServerError);
+    }
+
+
+    return result;
+}).Produces<Source>(StatusCodes.Status201Created)
+.Produces(StatusCodes.Status400BadRequest)
+.Produces(StatusCodes.Status500InternalServerError);
+sourceGroup.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) =>
+{
+    IResult result = TypedResults.NotFound();
+
+    try
+    {
+        if (await db.Sources.FindAsync(id) is Source source)
+        {
+            db.Sources.Remove(source);
+            await db.SaveChangesAsync();
+            result = Results.NoContent();
+        }
+    }
+    catch
+    {
+        result = TypedResults.StatusCode(StatusCodes.Status500InternalServerError);
+    }
+
+    return result;
+}).Produces(StatusCodes.Status204NoContent)
+.Produces(StatusCodes.Status500InternalServerError);
+
+var receiptGroup = app.MapGroup("/receipts/");
+receiptGroup.MapGet("/", async (FinanceManagementDb db) => await db.Receipts.ToListAsync());
+receiptGroup.MapGet("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) => await db.Receipts.FindAsync(id));
+receiptGroup.MapPost("/", async (Receipt receipt, FinanceManagementDb db) =>
+{
+    db.Receipts.Add(receipt);
     await db.SaveChangesAsync();
 
-    return Results.Created("test", source);
+    return Results.Created($"/receipts/{receipt.Id}", receipt);
+});
+
+var billGroup = app.MapGroup("/bills/");
+billGroup.MapGet("/", async (FinanceManagementDb db) => await db.Bills.ToListAsync());
+billGroup.MapGet("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) => await db.Bills.FindAsync(id));
+billGroup.MapPost("/", async (Bill bill, FinanceManagementDb db) =>
+{
+    db.Bills.Add(bill);
+    await db.SaveChangesAsync();
+
+    return Results.Created($"/bills/{bill.Id}", bill);
 });
 
 app.Run();
