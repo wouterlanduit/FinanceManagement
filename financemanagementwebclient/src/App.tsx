@@ -1,3 +1,4 @@
+import { FluentProvider, webDarkTheme } from '@fluentui/react-components';
 import './App.css'
 import MonthlyDetailsGrid from './MonthlyDetailsGrid'
 import { DataSource } from './services/data-source-service'
@@ -8,13 +9,15 @@ function App() {
 
     return (
         <>
-            <div>
-                <MonthlyDetailsGrid
-                    name="September"
-                    source={ds}
-                    _ISDEBUG_={window.location.hostname === 'localhost'}
-                />
-            </div>
+            <FluentProvider theme={webDarkTheme}>
+                <div>
+                    <MonthlyDetailsGrid
+                        name="September"
+                        source={ds}
+                        _ISDEBUG_={window.location.hostname === 'localhost'}
+                    />
+                    </div>
+            </FluentProvider>
         </>
     )
 }

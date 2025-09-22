@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ReceiptDTO } from './models/receipt-dto';
 import { DataSource, DataSourceService }  from './services/data-source-service'
 import { createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
+import AddRecordDialog, { type AddRecordDialogField } from './AddRecordDialog';
 
 export interface IMonthlyDetailsGridProps {
     name: string,
@@ -92,10 +93,51 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
 
     const rows = sort(getRows());
 
+    const dialogFields: AddRecordDialogField<ReceiptDTO, never>[] = [
+        {
+            name: "source",
+            type: "text",
+            setValue: (dto: ReceiptDTO, value: string) => {
+                dto.source = value
+            }
+        },
+        {
+            name: "amount",
+            type: "number",
+            setValue: (dto: ReceiptDTO, value: number) => {
+                dto.amount = value
+            }
+        },
+        {
+            name: "date",
+            type: "date",
+            setValue: (dto: ReceiptDTO, value: Date) => {
+                dto.date = value
+            }
+        }
+    ]
+
+    //TODO check if we can use row.rowId as row key
     return (
         <>
             {props._ISDEBUG_ && <p> { "DEBUG ENABLED"}</p>}
             <p>{props.name}</p>
+
+            <AddRecordDialog<ReceiptDTO>
+                _ISDEBUG_={props._ISDEBUG_}
+                fields={dialogFields}
+                initRecord={() => {
+                    return {
+                        id: 0,
+                        amount: 0,
+                        source: "",
+                        date: new Date()
+                    };
+                }}
+                createRecord={(a: ReceiptDTO) => {
+                    console.log(`record created. source:${a.source} - date:${a.date.toLocaleDateString('nl-be') }`);
+                }}
+            />
 
             {data != null &&
                 <Table
@@ -119,7 +161,7 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
                     </TableHeader>
                     <TableBody>
                         {rows.map((row) => (
-                            <TableRow key={row.item.id}>    // TODO check if we can use row.rowId
+                            <TableRow key={row.item.id}>
                                 {columns.map((column) => (
                                     <TableCell>
                                         {column.renderCell(row.item)}
