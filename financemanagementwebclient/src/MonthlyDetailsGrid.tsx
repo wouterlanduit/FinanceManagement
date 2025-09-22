@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from 'react';
 import type { ReceiptDTO } from './models/receipt-dto';
 import { DataSource, DataSourceService }  from './services/data-source-service'
-import { createTableColumn, DataGrid, DataGridBody, DataGridCell, DataGridHeader, DataGridHeaderCell, DataGridRow, type TableColumnDefinition } from '@fluentui/react-components';
+import { createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
 
 export interface IMonthlyDetailsGridProps {
     name: string,
@@ -21,7 +20,7 @@ const columns: TableColumnDefinition<ReceiptDTO>[] = [
             return "Date";
         },
         renderCell: (item) => {
-            return item.date.toLocaleDateString('nl-be');
+            return item.date.toLocaleDateString('nl-be');   // TODO config
         }
     }),
     createTableColumn<ReceiptDTO>({
@@ -62,38 +61,73 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
         setFetchingData(true);
     }
 
+    const {
+        getRows,
+        sort: {
+            getSortDirection,
+            toggleColumnSort,
+            sort
+        }
+    } = useTableFeatures(
+        {
+            columns: columns,
+            items: data ?? []
+        },
+        [
+            useTableSort({
+                defaultSortState: {
+                    sortColumn: "date",
+                    sortDirection: "ascending"
+                }
+            })
+        ]
+        );
+
+    const headerSortProps = (columnId: TableColumnId) => ({
+        onClick: (e: React.MouseEvent) => {
+            toggleColumnSort(e, columnId);
+        },
+        sortDirection: getSortDirection(columnId),
+    });
+
+    const rows = sort(getRows());
+
     return (
         <>
             {props._ISDEBUG_ && <p> { "DEBUG ENABLED"}</p>}
             <p>{props.name}</p>
 
             {data != null &&
-                <DataGrid
-                    items={data}
-                    columns={columns}
+                <Table
+                    noNativeElements={true}
+                    role="grid"
                     sortable
-                    getRowId={(item) => item.source}
-                    style={{ minWidth: "550px" }}
+                    size="small"
+                    style={{ minWidth: "475px" }}
                 >
-                    <DataGridHeader>
-                        <DataGridRow>
-                            {({ renderHeaderCell }) => (
-                                <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                            )}
-                        </DataGridRow>
-                    </DataGridHeader>
-                    <DataGridBody<ReceiptDTO>>
-                        {({ item, rowId }) => (
-                            <DataGridRow<ReceiptDTO>
-                                key={rowId}
-                            >
-                                {({ renderCell }) => (
-                                    <DataGridCell>{renderCell(item)}</DataGridCell>
-                                )}
-                            </DataGridRow>
-                        )}
-                    </DataGridBody>
-                </DataGrid>
+                    <TableHeader>
+                        <TableRow>
+                            {columns.map((column) => (
+                                <TableHeaderCell
+                                    key={column.columnId}
+                                    {...headerSortProps(column.columnId)}
+                                >
+                                    {column.renderHeaderCell()}
+                                </TableHeaderCell>
+                            ))}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {rows.map((row) => (
+                            <TableRow key={row.item.id}>    // TODO check if we can use row.rowId
+                                {columns.map((column) => (
+                                    <TableCell>
+                                        {column.renderCell(row.item)}
+                                    </TableCell>))}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             }
         </>
     );
