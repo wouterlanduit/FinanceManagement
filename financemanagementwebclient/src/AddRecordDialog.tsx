@@ -1,28 +1,39 @@
-import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger, Input, Label } from "@fluentui/react-components";
+import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger, Input, Label, type InputOnChangeData } from "@fluentui/react-components";
+import { useState } from "react";
 
-export type AddRecordDialogField<TRecord, TField> = {
+export type AddRecordDialogField<TRecord> = {
     name: string;
     type?: "date" | "number" | "text";
-    setValue: (dto: TRecord, value: TField) => void;
+    required?: boolean;
+    setValue: (dto: TRecord, valueStr: string) => void;
 }
 
 export interface IAddRecordDialogProps<TRecord> {
     _ISDEBUG_: boolean;
-    fields: AddRecordDialogField<TRecord, never>[];
+    fields: AddRecordDialogField<TRecord>[];
     initRecord: () => TRecord;
-    createRecord: (dto: TRecord) => void;
+    createRecord: (dto: TRecord) => boolean;
 }
 function AddRecordDialog<TRecord>(props: IAddRecordDialogProps<TRecord>) {
+    const [open, setOpen] = useState(false);
+
     const handleSubmit = (ev: React.FormEvent) => {
         ev.preventDefault();
-        const record: TRecord = props.initRecord();
 
-        // TODO call all setValue
+        // TODO validate
 
-        props.createRecord(record);
+        if (props.createRecord(record)) {
+            setOpen(false);
+        }
     };
 
-    return <Dialog modalType="non-modal">
+    const record: TRecord = props.initRecord();
+
+    return <Dialog
+        modalType="non-modal"
+        open={open}
+        onOpenChange={(_ev, data) => setOpen(data.open)}
+    >
         <DialogTrigger disableButtonEnhancement>
             <Button>Create</Button>
         </DialogTrigger>
@@ -32,20 +43,22 @@ function AddRecordDialog<TRecord>(props: IAddRecordDialogProps<TRecord>) {
                     <DialogTitle>Dialog title</DialogTitle>
                     <DialogContent className="addrecorddialogcontent">
                         {
-                            // TODO why are these fields not shown??
-                            props.fields.map((field: AddRecordDialogField<TRecord, never>) => {
+                            props.fields.map((field: AddRecordDialogField<TRecord>) => (
                                 <>
-                                    <Label required htmlFor={field.name + "-input"}>{field.name + ":"}</Label>
-                                    <Input required type={field.type ?? "text"} id={field.name + "-input"} />
+                                    <Label required={field.required ?? false} htmlFor={field.name + "-input"}>{field.name + ":"}</Label>
+                                    <Input
+                                        required={field.required ?? false}
+                                        type={field.type ?? "text"}
+                                        id={field.name + "-input"}
+                                        onChange={(_ev: React.ChangeEvent, data: InputOnChangeData) => { field.setValue(record, data.value) }}
+                                    />
                                 </>
-                            })
-
+                            ))
                         }
-                        <Label>{"TEST:"}</Label>
                     </DialogContent>
                     <DialogActions>
                         <Button type="submit" appearance="primary">
-                            Submit
+                            Create
                         </Button>
                         <DialogTrigger disableButtonEnhancement>
                             <Button appearance="secondary">Close</Button>

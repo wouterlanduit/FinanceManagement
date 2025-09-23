@@ -93,26 +93,29 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
 
     const rows = sort(getRows());
 
-    const dialogFields: AddRecordDialogField<ReceiptDTO, never>[] = [
+    const dialogFields: AddRecordDialogField<ReceiptDTO>[] = [
         {
             name: "source",
             type: "text",
+            required: true,
             setValue: (dto: ReceiptDTO, value: string) => {
-                dto.source = value
+                dto.source = value;
             }
         },
         {
             name: "amount",
             type: "number",
-            setValue: (dto: ReceiptDTO, value: number) => {
-                dto.amount = value
+            required: true,
+            setValue: (dto: ReceiptDTO, value: string) => {
+                dto.amount = Number(value);
             }
         },
         {
             name: "date",
             type: "date",
-            setValue: (dto: ReceiptDTO, value: Date) => {
-                dto.date = value
+            required: true,
+            setValue: (dto: ReceiptDTO, value: string) => {
+                dto.date = new Date(value);
             }
         }
     ]
@@ -135,7 +138,8 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
                     };
                 }}
                 createRecord={(a: ReceiptDTO) => {
-                    console.log(`record created. source:${a.source} - date:${a.date.toLocaleDateString('nl-be') }`);
+                    console.log(`record created. source:${a.source} - amount: ${a.amount} - date:${a.date.toLocaleDateString('nl-be')}`);
+                    return a.amount > 0;
                 }}
             />
 
