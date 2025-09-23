@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReceiptDTO } from './models/receipt-dto';
-import { DataSource, DataSourceService }  from './services/data-source-service'
-import { createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
+import { type DataSource, DataSourceService }  from './services/data-source-service'
+import { createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, Toolbar, ToolbarButton, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
 import AddRecordDialog, { type AddRecordDialogField } from './AddRecordDialog';
 
 export interface IMonthlyDetailsGridProps {
@@ -54,12 +54,18 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
     const [data, setData] = useState<ReceiptDTO[] | null>(null);
     const [fetchingData, setFetchingData] = useState<boolean>(false);
 
+    const triggerDataFetch = () => {
+        if (fetchingData === false) {
+            GetData(props.source).then((value: ReceiptDTO[]) => {
+                setData(value);
+                setFetchingData(false);
+            }).catch(() => setFetchingData(false)); //TODO show error?
+            setFetchingData(true)
+        }
+    }
+
     if (data === null && fetchingData === false) {
-        GetData(props.source).then((value: ReceiptDTO[]) => {
-            setData(value);
-            setFetchingData(false);
-        }).catch(() => setFetchingData(false)); //TODO show error?
-        setFetchingData(true);
+        triggerDataFetch();
     }
 
     const {
@@ -126,22 +132,28 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
             {props._ISDEBUG_ && <p> { "DEBUG ENABLED"}</p>}
             <p>{props.name}</p>
 
-            <AddRecordDialog<ReceiptDTO>
-                _ISDEBUG_={props._ISDEBUG_}
-                fields={dialogFields}
-                initRecord={() => {
-                    return {
-                        id: 0,
-                        amount: 0,
-                        source: "",
-                        date: new Date()
-                    };
-                }}
-                createRecord={(a: ReceiptDTO) => {
-                    console.log(`record created. source:${a.source} - amount: ${a.amount} - date:${a.date.toLocaleDateString('nl-be')}`);
-                    return a.amount > 0;
-                }}
-            />
+            <Toolbar>
+                <AddRecordDialog<ReceiptDTO>
+                    _ISDEBUG_={props._ISDEBUG_}
+                    fields={dialogFields}
+                    initRecord={() => {
+                        return {
+                            id: 0,
+                            amount: 0,
+                            source: "",
+                            date: new Date()
+                        };
+                    }}
+                    createRecord={(a: ReceiptDTO) => {
+                        props.source.addReceipt(a);
+                        console.log(`record created. source:${a.source} - amount: ${a.amount} - date:${a.date.toLocaleDateString('nl-be')}`);
+                        triggerDataFetch();
+                        return a.amount > 0;
+                    }}
+                />
+                <ToolbarButton aria-label="Refresh" onClick={triggerDataFetch}>Refresh</ToolbarButton>
+            </Toolbar>
+            
 
             {data != null &&
                 <Table

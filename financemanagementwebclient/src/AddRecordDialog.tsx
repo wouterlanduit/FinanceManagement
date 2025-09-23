@@ -35,7 +35,7 @@ function AddRecordDialog<TRecord>(props: IAddRecordDialogProps<TRecord>) {
         onOpenChange={(_ev, data) => setOpen(data.open)}
     >
         <DialogTrigger disableButtonEnhancement>
-            <Button>Create</Button>
+            <Button appearance="subtle">Create</Button>
         </DialogTrigger>
         <DialogSurface aria-describedby={undefined}>
             <form onSubmit={handleSubmit}>
