@@ -16,19 +16,22 @@ export class DummyDataSource implements DataSource {
         {
             id: 1,
             date: new Date(2025, 8, 3),
-            source: "Store_1",
+            sourceid: 1,
+            sourcename: "Store_1",
             amount: 20.05
         },
         {
             id: 2,
             date: new Date(2025, 8, 9),
-            source: "Store_2",
+            sourceid: 2,
+            sourcename: "Store_2",
             amount: 10.05
         },
         {
             id: 3,
             date: new Date(2025, 8, 13),
-            source: "Store_3",
+            sourceid: 3,
+            sourcename: "Store_3",
             amount: 18.62
         }
     ];

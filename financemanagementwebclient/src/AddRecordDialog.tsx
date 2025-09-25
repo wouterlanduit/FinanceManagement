@@ -1,11 +1,12 @@
-import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger, Input, Label, type InputOnChangeData } from "@fluentui/react-components";
+import { Button, Combobox, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger, Input, Label, type InputOnChangeData, Option, type SelectionEvents, type OptionOnSelectData } from "@fluentui/react-components";
 import { useState } from "react";
 
 export type AddRecordDialogField<TRecord> = {
     name: string;
-    type?: "date" | "number" | "text";
+    type?: "date" | "number" | "text" | "combobox";
     required?: boolean;
     setValue: (dto: TRecord, valueStr: string) => void;
+    options?: { [id: string] : string };
 }
 
 export interface IAddRecordDialogProps<TRecord> {
@@ -46,12 +47,34 @@ function AddRecordDialog<TRecord>(props: IAddRecordDialogProps<TRecord>) {
                             props.fields.map((field: AddRecordDialogField<TRecord>) => (
                                 <>
                                     <Label required={field.required ?? false} htmlFor={field.name + "-input"}>{field.name + ":"}</Label>
-                                    <Input
-                                        required={field.required ?? false}
-                                        type={field.type ?? "text"}
-                                        id={field.name + "-input"}
-                                        onChange={(_ev: React.ChangeEvent, data: InputOnChangeData) => { field.setValue(record, data.value) }}
-                                    />
+                                    {field.type != "combobox" &&
+                                        <Input
+                                            required={field.required ?? false}
+                                            type={field.type ?? "text"}
+                                            id={field.name + "-input"}
+                                            onChange={(_ev: React.ChangeEvent, data: InputOnChangeData) => { field.setValue(record, data.value) }}
+                                        />
+                                    }
+                                    {field.type === "combobox" &&
+                                        <Combobox
+                                            required={field.required ?? false}
+                                            id={field.name + "-input"}
+                                            onOptionSelect={(_ev: SelectionEvents, data: OptionOnSelectData) => {
+                                                field.setValue(record, data.optionValue ?? "");
+                                            }}
+                                            onActiveOptionChange={(_ev: React.SyntheticEvent|Event, data) => {
+                                                field.setValue(record, data?.nextOption?.id ?? "");
+                                            }}>
+                                            {field.options != undefined && Object.keys(field.options!).map((option: string) => (
+                                                <Option
+                                                    key={option}
+                                                    value={option}
+                                                >
+                                                    {field.options![option]}
+                                                </Option>
+                                            ))}
+                                        </Combobox>
+                                    }
                                 </>
                             ))
                         }

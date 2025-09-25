@@ -3,6 +3,7 @@ import type { ReceiptDTO } from './models/receipt-dto';
 import { type DataSource, DataSourceService }  from './services/data-source-service'
 import { createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, Toolbar, ToolbarButton, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
 import AddRecordDialog, { type AddRecordDialogField } from './AddRecordDialog';
+import type { SourceDTO } from './models/source-dto';
 
 export interface IMonthlyDetailsGridProps {
     name: string,
@@ -39,32 +40,48 @@ const columns: TableColumnDefinition<ReceiptDTO>[] = [
     createTableColumn<ReceiptDTO>({
         columnId: "source",
         compare: (a, b) => {
-            return a.source.localeCompare(b.source);
+            return a.sourcename.localeCompare(b.sourcename);
         },
         renderHeaderCell: () => {
             return "Source";
         },
         renderCell: (item) => {
-            return item.source;
+            return item.sourcename;
         }
     })
 ]
 
 function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
-    const [data, setData] = useState<ReceiptDTO[] | null>(null);
+    const [receipts, setReceipts] = useState<ReceiptDTO[] | null>(null);
     const [fetchingData, setFetchingData] = useState<boolean>(false);
+
+    // TODO fetch from DS
+    const sources: SourceDTO[] = [
+        {
+            id: 1,
+            name: "Store_1"
+        },
+        {
+            id: 2,
+            name: "Store_2"
+        },
+        {
+            id: 3,
+            name: "Store_3"
+        },
+    ];
 
     const triggerDataFetch = () => {
         if (fetchingData === false) {
             GetData(props.source).then((value: ReceiptDTO[]) => {
-                setData(value);
+                setReceipts(value);
                 setFetchingData(false);
             }).catch(() => setFetchingData(false)); //TODO show error?
             setFetchingData(true)
         }
     }
 
-    if (data === null && fetchingData === false) {
+    if (receipts === null && fetchingData === false) {
         triggerDataFetch();
     }
 
@@ -78,7 +95,7 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
     } = useTableFeatures(
         {
             columns: columns,
-            items: data ?? []
+            items: receipts ?? []
         },
         [
             useTableSort({
@@ -99,14 +116,21 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
 
     const rows = sort(getRows());
 
+    const sourceDictionary: { [id: string]: string } = {};
+    sources.forEach((value: SourceDTO) => sourceDictionary[value.id.toString()] = value.name);
+
     const dialogFields: AddRecordDialogField<ReceiptDTO>[] = [
         {
             name: "source",
-            type: "text",
+            type: "combobox",
             required: true,
             setValue: (dto: ReceiptDTO, value: string) => {
-                dto.source = value;
-            }
+                dto.sourceid = Number(value);
+                dto.sourcename = sources.find((source: SourceDTO) => {
+                    return source.id === dto.sourceid;
+                })?.name ?? "";
+            },
+            options: sourceDictionary
         },
         {
             name: "amount",
@@ -140,13 +164,14 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
                         return {
                             id: 0,
                             amount: 0,
-                            source: "",
+                            sourceid: 0,
+                            sourcename: "",
                             date: new Date()
                         };
                     }}
                     createRecord={(a: ReceiptDTO) => {
                         props.source.addReceipt(a);
-                        console.log(`record created. source:${a.source} - amount: ${a.amount} - date:${a.date.toLocaleDateString('nl-be')}`);
+                        console.log(`record created. source:${a.sourcename} - amount: ${a.amount} - date:${a.date.toLocaleDateString('nl-be')}`);
                         triggerDataFetch();
                         return a.amount > 0;
                     }}
@@ -155,7 +180,7 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
             </Toolbar>
             
 
-            {data != null &&
+            {receipts != null &&
                 <Table
                     noNativeElements={true}
                     role="grid"

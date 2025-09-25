@@ -1,6 +1,7 @@
 export interface ReceiptDTO {
-    id: number;
-    source: string;
+    id?: number;
+    sourcename: string;
+    sourceid: number;
     amount: number;
     date: Date;
 }
