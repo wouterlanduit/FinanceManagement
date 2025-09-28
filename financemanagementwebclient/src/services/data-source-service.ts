@@ -1,5 +1,5 @@
-import type { ReceiptDTO } from '../models/receipt-dto';
-import type { SourceDTO } from '../models/source-dto';
+import type { ReceiptDTO, ReceiptResponseJSON } from '../models/receipt-dto';
+import type { SourceDTO, SourceResponseJSON } from '../models/source-dto';
 
 export interface DataSource {
     useDummyData: boolean;
@@ -65,9 +65,49 @@ export class DummyDataSource implements DataSource {
 
 export class AIPDataSource implements DataSource {
     useDummyData: boolean = false;
+    bearerToken: string = "";
+    backendUrl: string = "http://localhost:5265";
+    sources: SourceDTO[] = [];
+
+    public async getBearerToken(): Promise<string> {
+        if (this.bearerToken === "") {
+            // TODO get bearer
+            const resp: Response = await fetch(this.backendUrl + "/login");
+            if (!resp.ok) {
+                throw new Error("Failed to login.");
+            }
+            const jsonResult = await resp.json();
+            // TODO do we need to get a specific property?
+            this.bearerToken = jsonResult;
+        }
+
+        return this.bearerToken;
+    }
 
     public async loadReceipts(): Promise<ReceiptDTO[]> {
-        throw new Error("Not implemented");
+        await this.loadSources();
+        const resp: Response = await fetch(this.backendUrl + "/receipts");
+        if (!resp.ok) {
+            throw new Error("Failed to fetch receipts.");
+        }
+
+        const jsonResult: ReceiptResponseJSON[] = await resp.json();
+
+        return jsonResult.map(value => {
+            return {
+                id: value.id ?? 0,
+                amount: value.amount ?? 0,
+                date: new Date(value.date ?? ""),
+                sourceid: value.sourceId ?? 0,
+                sourcename: this.translateSourceId(value.sourceId ?? 0)
+            }
+        });
+    }
+
+    private translateSourceId(sourceId: number): string {
+        return this.sources.find((source: SourceDTO) => {
+            return source.id === sourceId;
+        })?.name ?? "";
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -76,7 +116,23 @@ export class AIPDataSource implements DataSource {
     }
 
     public async loadSources(): Promise<SourceDTO[]> {
-        throw new Error("Not implemented");
+        if (this.sources.length <= 0) {
+            const resp: Response = await fetch(this.backendUrl + "/sources");
+            if (!resp.ok) {
+                throw new Error("Failed to fetch sources.");
+            }
+
+            const jsonResult: SourceResponseJSON[] = await resp.json();
+
+            this.sources = jsonResult.map(value => {
+                return {
+                    id: value.id ?? 0,
+                    name: value.name ?? 0
+                }
+            });
+        }
+
+        return this.sources;
     }
 }
 

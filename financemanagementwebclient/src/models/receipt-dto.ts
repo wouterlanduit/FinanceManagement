@@ -5,3 +5,10 @@ export interface ReceiptDTO {
     amount: number;
     date: Date;
 }
+
+export interface ReceiptResponseJSON {
+    id?: number;
+    sourceId?: number;
+    amount?: number;
+    date?: string;
+}
