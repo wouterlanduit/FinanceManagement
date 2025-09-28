@@ -1,17 +1,22 @@
 using FinanceManagementAPI;
 using FinanceManagementAPI.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // TODO create config file
 var connectionString = builder.Configuration.GetConnectionString("FinancesDb") ?? "Data source=Finances.db";
+string DefaultAuthenticationSchema = "jwt";
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -22,14 +27,38 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Finances",
         Version = "v1"
     });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Scheme = "Bearer",
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
     c.AddSecurityDefinition("FinanceDefinition", new OpenApiSecurityScheme
     {
         Scheme = "FinanceScheme",
         In = ParameterLocation.Header,
-        Name = "Womee",
+        Name = "test",
         Type = SecuritySchemeType.ApiKey
     });
 
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
     OpenApiSecurityRequirement securityRequirement = new OpenApiSecurityRequirement();
     securityRequirement.Add(
         new OpenApiSecurityScheme
@@ -52,10 +81,25 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, FinanceAuthenticationHandler>("FinanceScheme", options =>
-{
-});
+builder.Services.AddAuthentication(DefaultAuthenticationSchema)
+    .AddJwtBearer("jwt", options =>
+    {
+        options.MapInboundClaims = false;
+    })
+    .AddScheme<AuthenticationSchemeOptions, FinanceAuthenticationHandler>("FinanceScheme", options =>
+    {
+    });
 builder.Services.AddAuthorization();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            // TODO check how to specify origin correctly
+            policy.WithOrigins("http://localhost").AllowAnyOrigin();
+        });
+});
 
 var app = builder.Build();
 
@@ -69,8 +113,24 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapPost("/login", () =>
+{
+    JsonWebTokenHandler handler = new JsonWebTokenHandler();
+
+    // TODO add key
+
+    return handler.CreateToken(new SecurityTokenDescriptor()
+    {
+        Subject = new ClaimsIdentity(new[]
+        {
+            new Claim("name", "test")
+        })
+    });
+});
 
 var sourceGroup = app.MapGroup("/sources/");
 sourceGroup.MapGet("/", async (FinanceManagementDb db) => await db.Sources.ToListAsync());
