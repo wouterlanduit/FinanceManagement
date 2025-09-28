@@ -1,10 +1,12 @@
+using FinanceManagementAPI;
 using FinanceManagementAPI.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,27 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Finances",
         Version = "v1"
     });
+    c.AddSecurityDefinition("FinanceDefinition", new OpenApiSecurityScheme
+    {
+        Scheme = "FinanceScheme",
+        In = ParameterLocation.Header,
+        Name = "Womee",
+        Type = SecuritySchemeType.ApiKey
+    });
+
+    OpenApiSecurityRequirement securityRequirement = new OpenApiSecurityRequirement();
+    securityRequirement.Add(
+        new OpenApiSecurityScheme
+        {
+            Reference = new OpenApiReference
+            {
+                Id = "FinanceDefinition",
+                Type = ReferenceType.SecurityScheme
+            }
+        },
+        new List<string>());
+
+    c.AddSecurityRequirement(securityRequirement);
 });
 
 builder.Services.AddSqlite<FinanceManagementDb>(connectionString);
@@ -29,18 +52,25 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, FinanceAuthenticationHandler>("FinanceScheme", options =>
+{
+});
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 //app.UseStatusCodePages();
 if (app.Environment.IsDevelopment())
 {
-    //app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(c => {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Finance Management API v1");
     });
 }
 
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 
 var sourceGroup = app.MapGroup("/sources/");
 sourceGroup.MapGet("/", async (FinanceManagementDb db) => await db.Sources.ToListAsync());
