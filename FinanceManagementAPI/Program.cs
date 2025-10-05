@@ -93,7 +93,8 @@ builder.Services.AddAuthorization(builder =>
 {
     builder.AddPolicy("Read", policy =>
         policy
-            .RequireAuthenticatedUser());
+            .RequireAuthenticatedUser()
+            .AddAuthenticationSchemes(DefaultAuthenticationSchema));
     builder.AddPolicy("DetailedRead", policy =>
         policy
             .RequireAuthenticatedUser()
@@ -140,114 +141,12 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapPost("/login", () =>
-{
-    JsonWebTokenHandler handler = new JsonWebTokenHandler();
-    var claims = new List<Claim>();
-    claims.Add(new Claim("name", "test"));
-    claims.Add(new Claim(ClaimTypes.Role, "admin"));    // TODO why does this not work with customer role claim type -> something in authentication handler??
-    var identity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme, "name", ClaimTypes.Role);
-    // TODO add key
+LoginEndpoints.Map(app, SignKey);
 
-    return handler.CreateToken(new SecurityTokenDescriptor()
-    {
-        Subject = identity,
-        SigningCredentials = new SigningCredentials(
-            new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(SignKey)),
-            SecurityAlgorithms.HmacSha256)
-    });
-});
+SourceEndpoints.Map(app);
 
-var sourceGroup = app.MapGroup("/sources/");
-sourceGroup.MapGet("/", async (FinanceManagementDb db) => await db.Sources.ToListAsync());
-sourceGroup.MapGet("/{id}", async ([FromRoute]int id, [FromServices]FinanceManagementDb db) => await db.Sources.FindAsync(id));
-sourceGroup.MapPost("/", async (Source source, FinanceManagementDb db) =>
-{
-    IResult result = TypedResults.BadRequest();
+ReceiptEndpoints.Map(app);
 
-    try
-    {
-        db.Sources.Add(source);
-        await db.SaveChangesAsync();
-        result = TypedResults.Created($"/sources/{source.Id}", source);
-    }
-    catch
-    {
-        result = TypedResults.StatusCode(StatusCodes.Status500InternalServerError);
-    }
-
-
-    return result;
-})
-    .Produces<Source>(StatusCodes.Status201Created)
-    .Produces(StatusCodes.Status400BadRequest)
-    .Produces(StatusCodes.Status500InternalServerError);
-sourceGroup.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) =>
-{
-    IResult result = TypedResults.NotFound();
-
-    try
-    {
-        if (await db.Sources.FindAsync(id) is Source source)
-        {
-            db.Sources.Remove(source);
-            await db.SaveChangesAsync();
-            result = Results.NoContent();
-        }
-    }
-    catch
-    {
-        result = TypedResults.StatusCode(StatusCodes.Status500InternalServerError);
-    }
-
-    return result;
-})
-    .Produces(StatusCodes.Status204NoContent)
-    .Produces(StatusCodes.Status500InternalServerError);
-
-var receiptGroup = app.MapGroup("/receipts/");
-receiptGroup.MapGet("/", async (FinanceManagementDb db) => await db.Receipts.ToListAsync())
-    .RequireAuthorization("Read");
-receiptGroup.MapGet("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) => await db.Receipts.FindAsync(id))
-    .RequireAuthorization("DetailedRead");
-receiptGroup.MapPost("/", async (Receipt receipt, FinanceManagementDb db) =>
-{
-    db.Receipts.Add(receipt);
-    await db.SaveChangesAsync();
-
-    return Results.Created($"/receipts/{receipt.Id}", receipt);
-})
-    .RequireAuthorization("Write");
-receiptGroup.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) =>
-{
-    IResult result = TypedResults.NotFound();
-
-    try
-    {
-        if (await db.Receipts.FindAsync(id) is Receipt receipt)
-        {
-            db.Receipts.Remove(receipt);
-            await db.SaveChangesAsync();
-            result = Results.NoContent();
-        }
-    }
-    catch
-    {
-        result = TypedResults.StatusCode(StatusCodes.Status500InternalServerError);
-    }
-
-    return result;
-});
-
-var billGroup = app.MapGroup("/bills/");
-billGroup.MapGet("/", async (FinanceManagementDb db) => await db.Bills.ToListAsync());
-billGroup.MapGet("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) => await db.Bills.FindAsync(id));
-billGroup.MapPost("/", async (Bill bill, FinanceManagementDb db) =>
-{
-    db.Bills.Add(bill);
-    await db.SaveChangesAsync();
-
-    return Results.Created($"/bills/{bill.Id}", bill);
-});
+BillEndpoints.Map(app);
 
 app.Run();
