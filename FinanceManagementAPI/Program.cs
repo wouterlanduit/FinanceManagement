@@ -1,6 +1,7 @@
 using FinanceManagementAPI;
 using FinanceManagementAPI.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -14,9 +15,20 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// TODO list
+// - generate an asymmetric key for bearer
+// - move config to config file
+// - setup proper token validation parameters
+// - setup proper policy
+// - look into default policy
+// - create proper token with proper claims
+
+
+
 // TODO create config file
 var connectionString = builder.Configuration.GetConnectionString("FinancesDb") ?? "Data source=Finances.db";
-string DefaultAuthenticationSchema = "jwt";
+string DefaultAuthenticationSchema = JwtBearerDefaults.AuthenticationScheme;
+string SignKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -29,16 +41,9 @@ builder.Services.AddSwaggerGen(c =>
     });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Scheme = "Bearer",
+        Scheme = JwtBearerDefaults.AuthenticationScheme,
         In = ParameterLocation.Header,
         Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
-    });
-    c.AddSecurityDefinition("FinanceDefinition", new OpenApiSecurityScheme
-    {
-        Scheme = "FinanceScheme",
-        In = ParameterLocation.Header,
-        Name = "test",
         Type = SecuritySchemeType.ApiKey
     });
 
@@ -59,19 +64,6 @@ builder.Services.AddSwaggerGen(c =>
             new List<string>()
         }
     });
-    OpenApiSecurityRequirement securityRequirement = new OpenApiSecurityRequirement();
-    securityRequirement.Add(
-        new OpenApiSecurityScheme
-        {
-            Reference = new OpenApiReference
-            {
-                Id = "FinanceDefinition",
-                Type = ReferenceType.SecurityScheme
-            }
-        },
-        new List<string>());
-
-    c.AddSecurityRequirement(securityRequirement);
 });
 
 builder.Services.AddSqlite<FinanceManagementDb>(connectionString);
@@ -82,14 +74,45 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddAuthentication(DefaultAuthenticationSchema)
-    .AddJwtBearer("jwt", options =>
+    .AddJwtBearer(DefaultAuthenticationSchema ,options =>
     {
         options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(SignKey)),
+            ValidateAudience = false,   // TODO true
+            ValidateIssuer = false,     // TODO true
+        };
     })
     .AddScheme<AuthenticationSchemeOptions, FinanceAuthenticationHandler>("FinanceScheme", options =>
     {
     });
-builder.Services.AddAuthorization();
+
+// TODO how to set default policy?
+builder.Services.AddAuthorization(builder =>
+{
+    builder.AddPolicy("Read", policy =>
+        policy
+            .RequireAuthenticatedUser());
+    builder.AddPolicy("DetailedRead", policy =>
+        policy
+            .RequireAuthenticatedUser()
+            .AddAuthenticationSchemes(DefaultAuthenticationSchema)
+            .RequireClaim("name", "test")
+            .RequireRole("admin"));
+    builder.AddPolicy("Write", policy =>
+        policy
+            .RequireAuthenticatedUser()
+            .AddAuthenticationSchemes(DefaultAuthenticationSchema)
+            .RequireClaim("name", "test")
+            .RequireRole("admin"));
+    builder.AddPolicy("Delete", policy =>
+        policy
+            .RequireAuthenticatedUser()
+            .AddAuthenticationSchemes(DefaultAuthenticationSchema)
+            .RequireClaim("name", "test")
+            .RequireRole("admin"));
+});
 
 builder.Services.AddCors(options =>
 {
@@ -120,15 +143,18 @@ app.UseAuthorization();
 app.MapPost("/login", () =>
 {
     JsonWebTokenHandler handler = new JsonWebTokenHandler();
-
+    var claims = new List<Claim>();
+    claims.Add(new Claim("name", "test"));
+    claims.Add(new Claim(ClaimTypes.Role, "admin"));    // TODO why does this not work with customer role claim type -> something in authentication handler??
+    var identity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme, "name", ClaimTypes.Role);
     // TODO add key
 
     return handler.CreateToken(new SecurityTokenDescriptor()
     {
-        Subject = new ClaimsIdentity(new[]
-        {
-            new Claim("name", "test")
-        })
+        Subject = identity,
+        SigningCredentials = new SigningCredentials(
+            new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(SignKey)),
+            SecurityAlgorithms.HmacSha256)
     });
 });
 
@@ -152,9 +178,10 @@ sourceGroup.MapPost("/", async (Source source, FinanceManagementDb db) =>
 
 
     return result;
-}).Produces<Source>(StatusCodes.Status201Created)
-.Produces(StatusCodes.Status400BadRequest)
-.Produces(StatusCodes.Status500InternalServerError);
+})
+    .Produces<Source>(StatusCodes.Status201Created)
+    .Produces(StatusCodes.Status400BadRequest)
+    .Produces(StatusCodes.Status500InternalServerError);
 sourceGroup.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) =>
 {
     IResult result = TypedResults.NotFound();
@@ -174,18 +201,42 @@ sourceGroup.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] Finance
     }
 
     return result;
-}).Produces(StatusCodes.Status204NoContent)
-.Produces(StatusCodes.Status500InternalServerError);
+})
+    .Produces(StatusCodes.Status204NoContent)
+    .Produces(StatusCodes.Status500InternalServerError);
 
 var receiptGroup = app.MapGroup("/receipts/");
-receiptGroup.MapGet("/", async (FinanceManagementDb db) => await db.Receipts.ToListAsync());
-receiptGroup.MapGet("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) => await db.Receipts.FindAsync(id));
+receiptGroup.MapGet("/", async (FinanceManagementDb db) => await db.Receipts.ToListAsync())
+    .RequireAuthorization("Read");
+receiptGroup.MapGet("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) => await db.Receipts.FindAsync(id))
+    .RequireAuthorization("DetailedRead");
 receiptGroup.MapPost("/", async (Receipt receipt, FinanceManagementDb db) =>
 {
     db.Receipts.Add(receipt);
     await db.SaveChangesAsync();
 
     return Results.Created($"/receipts/{receipt.Id}", receipt);
+})
+    .RequireAuthorization("Write");
+receiptGroup.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) =>
+{
+    IResult result = TypedResults.NotFound();
+
+    try
+    {
+        if (await db.Receipts.FindAsync(id) is Receipt receipt)
+        {
+            db.Receipts.Remove(receipt);
+            await db.SaveChangesAsync();
+            result = Results.NoContent();
+        }
+    }
+    catch
+    {
+        result = TypedResults.StatusCode(StatusCodes.Status500InternalServerError);
+    }
+
+    return result;
 });
 
 var billGroup = app.MapGroup("/bills/");
