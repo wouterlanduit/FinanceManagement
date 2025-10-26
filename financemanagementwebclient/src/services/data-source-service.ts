@@ -89,7 +89,11 @@ export class AIPDataSource implements DataSource {
 
     public async loadReceipts(): Promise<ReceiptDTO[]> {
         await this.loadSources();
-        const resp: Response = await fetch(this.backendUrl + "/receipts");
+
+        const bearerToken: string = await this.getBearerToken();
+        const request: Request = new Request(this.backendUrl + "/receipts");
+        request.headers.set("Authorization", "Bearer " + bearerToken);
+        const resp: Response = await fetch(request);
         if (!resp.ok) {
             throw new Error("Failed to fetch receipts.");
         }
@@ -122,7 +126,7 @@ export class AIPDataSource implements DataSource {
         if (this.sources.length <= 0) {
             const bearerToken: string = await this.getBearerToken();
             const request: Request = new Request(this.backendUrl + "/sources");
-            request.headers.set("Authentication", "Bearer " + bearerToken);
+            request.headers.set("Authorization", "Bearer " + bearerToken);
 
             const resp: Response = await fetch(request);
             if (!resp.ok) {
