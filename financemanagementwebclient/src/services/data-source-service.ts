@@ -72,11 +72,14 @@ export class AIPDataSource implements DataSource {
     public async getBearerToken(): Promise<string> {
         if (this.bearerToken === "") {
             // TODO get bearer
-            const resp: Response = await fetch(this.backendUrl + "/login");
+            const resp: Response = await fetch(this.backendUrl + "/login?name=API&apiKey=test", {
+                method: "POST"
+            });
             if (!resp.ok) {
                 throw new Error("Failed to login.");
             }
-            const jsonResult = await resp.json();
+            // TODO womee: return json with token en expiry
+            const jsonResult = await resp.text();
             // TODO do we need to get a specific property?
             this.bearerToken = jsonResult;
         }
@@ -117,7 +120,11 @@ export class AIPDataSource implements DataSource {
 
     public async loadSources(): Promise<SourceDTO[]> {
         if (this.sources.length <= 0) {
-            const resp: Response = await fetch(this.backendUrl + "/sources");
+            const bearerToken: string = await this.getBearerToken();
+            const request: Request = new Request(this.backendUrl + "/sources");
+            request.headers.set("Authentication", "Bearer " + bearerToken);
+
+            const resp: Response = await fetch(request);
             if (!resp.ok) {
                 throw new Error("Failed to fetch sources.");
             }
