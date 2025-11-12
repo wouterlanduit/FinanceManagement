@@ -1,5 +1,7 @@
 import { Button, Combobox, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger, Input, Label, type InputOnChangeData, Option, type SelectionEvents, type OptionOnSelectData } from "@fluentui/react-components";
 import { useState } from "react";
+import './AddRecordDialog.css'
+import { FluentProvider, webDarkTheme } from '@fluentui/react-components';
 
 export type AddRecordDialogField<TRecord> = {
     name: string;
@@ -30,7 +32,9 @@ function AddRecordDialog<TRecord>(props: IAddRecordDialogProps<TRecord>) {
 
     const record: TRecord = props.initRecord();
 
-    return <Dialog
+    return <>
+    <FluentProvider theme={webDarkTheme}>
+    <Dialog
         modalType="non-modal"
         open={open}
         onOpenChange={(_ev, data) => setOpen(data.open)}
@@ -91,6 +95,8 @@ function AddRecordDialog<TRecord>(props: IAddRecordDialogProps<TRecord>) {
             </form>
         </DialogSurface>
     </Dialog>
+        </FluentProvider>
+    </>
 }
 
 export default AddRecordDialog;

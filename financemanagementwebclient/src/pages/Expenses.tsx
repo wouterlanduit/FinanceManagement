@@ -1,8 +1,8 @@
 import MonthlyDetailsGrid from "../components/MonthlyDetailsGrid/MonthlyDetailsGrid";
-import { AIPDataSource, type DataSource } from "../services/data-source-service";
+import { AIPDataSource, DummyDataSource, type DataSource } from "../services/data-source-service";
 
 function Expenses() {
-    const ds: DataSource = new AIPDataSource();
+    const ds: DataSource = new DummyDataSource();//new AIPDataSource();
     ds.useDummyData = window.location.hostname === 'localhost';
 
     return (
