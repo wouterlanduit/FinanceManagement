@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import type { ReceiptDTO } from './models/receipt-dto';
-import { type DataSource, DataSourceService }  from './services/data-source-service'
+import type { ReceiptDTO } from '../../models/receipt-dto';
+import { type DataSource, DataSourceService }  from '../../services/data-source-service'
 import { createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, Toolbar, ToolbarButton, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
-import AddRecordDialog, { type AddRecordDialogField } from './AddRecordDialog';
-import type { SourceDTO } from './models/source-dto';
+import AddRecordDialog, { type AddRecordDialogField } from '../AddRecordDialog/AddRecordDialog';
+import type { SourceDTO } from '../../models/source-dto';
 
 export interface IMonthlyDetailsGridProps {
     name: string,
@@ -189,7 +189,7 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
                     style={{ minWidth: "475px" }}
                 >
                     <TableHeader>
-                        <TableRow>
+                        <TableRow key="header">
                             {columns.map((column) => (
                                 <TableHeaderCell
                                     key={column.columnId}

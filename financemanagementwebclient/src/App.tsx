@@ -1,6 +1,6 @@
 import { FluentProvider, webDarkTheme } from '@fluentui/react-components';
 import './App.css'
-import MonthlyDetailsGrid from './MonthlyDetailsGrid'
+import MonthlyDetailsGrid from './components/MonthlyDetailsGrid/MonthlyDetailsGrid'
 import { AIPDataSource, type DataSource } from './services/data-source-service'
 
 function App() {
