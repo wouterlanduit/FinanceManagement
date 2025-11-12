@@ -22,9 +22,13 @@ namespace FinanceManagementAPI
                 }
                 if (!string.IsNullOrEmpty(apiKey))
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, "admin"));    // TODO why does this not work with custom role claim type -> something in authentication handler??
+                    claims.Add(new Claim(ClaimTypes.Role, Constants.Authorization.RoleAdmin));    // TODO why does this not work with custom role claim type -> something in authentication handler??
                 }
-                var identity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme, "name", ClaimTypes.Role);
+                var identity = new ClaimsIdentity(
+                    claims,                                     // claims
+                    JwtBearerDefaults.AuthenticationScheme,     // authentication type
+                    "name",                                     // name type
+                    ClaimTypes.Role);                           // role type
                 // TODO add key
 
                 return handler.CreateToken(new SecurityTokenDescriptor()

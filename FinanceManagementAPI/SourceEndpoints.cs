@@ -14,9 +14,9 @@ namespace FinanceManagementAPI
         {
             var sourceGroup = app.MapGroup("/sources/");
             sourceGroup.MapGet("/", async (FinanceManagementDb db) => await db.Sources.ToListAsync())
-                .RequireAuthorization("Read");
+                .RequireAuthorization(Constants.Authorization.PolicyRead);
             sourceGroup.MapGet("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) => await db.Sources.FindAsync(id))
-                .RequireAuthorization("DetailedRead");
+                .RequireAuthorization(Constants.Authorization.PolicyDetailedRead);
             sourceGroup.MapPost("/", async (Source source, FinanceManagementDb db) =>
             {
                 IResult result = TypedResults.BadRequest();
@@ -38,7 +38,7 @@ namespace FinanceManagementAPI
                 .Produces<Source>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status500InternalServerError)
-                .RequireAuthorization("Write");
+                .RequireAuthorization(Constants.Authorization.PolicyWrite);
             sourceGroup.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) =>
             {
                 IResult result = TypedResults.NotFound();
@@ -61,7 +61,7 @@ namespace FinanceManagementAPI
             })
                 .Produces(StatusCodes.Status204NoContent)
                 .Produces(StatusCodes.Status500InternalServerError)
-                .RequireAuthorization("Delete");
+                .RequireAuthorization(Constants.Authorization.PolicyDelete);
         }
     }
 }

@@ -1,16 +1,15 @@
 using FinanceManagementAPI;
 using FinanceManagementAPI.Models;
+using FinanceManagementAPI.Constants;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Security.Claims;
+using Microsoft.VisualBasic;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -91,28 +90,28 @@ builder.Services.AddAuthentication(DefaultAuthenticationSchema)
 // TODO how to set default policy?
 builder.Services.AddAuthorization(builder =>
 {
-    builder.AddPolicy("Read", policy =>
+    builder.AddPolicy(Authorization.PolicyRead, policy =>
         policy
             .RequireAuthenticatedUser()
             .AddAuthenticationSchemes(DefaultAuthenticationSchema));
-    builder.AddPolicy("DetailedRead", policy =>
+    builder.AddPolicy(Authorization.PolicyDetailedRead, policy =>
         policy
             .RequireAuthenticatedUser()
             .AddAuthenticationSchemes(DefaultAuthenticationSchema)
             .RequireClaim("name", "test")
-            .RequireRole("admin"));
-    builder.AddPolicy("Write", policy =>
+            .RequireRole(Authorization.RoleAdmin));
+    builder.AddPolicy(Authorization.PolicyWrite, policy =>
         policy
             .RequireAuthenticatedUser()
             .AddAuthenticationSchemes(DefaultAuthenticationSchema)
             .RequireClaim("name", "test")
-            .RequireRole("admin"));
-    builder.AddPolicy("Delete", policy =>
+            .RequireRole(Authorization.RoleAdmin));
+    builder.AddPolicy(Authorization.PolicyDelete, policy =>
         policy
             .RequireAuthenticatedUser()
             .AddAuthenticationSchemes(DefaultAuthenticationSchema)
             .RequireClaim("name", "test")
-            .RequireRole("admin"));
+            .RequireRole(Authorization.RoleAdmin));
 });
 
 builder.Services.AddCors(options =>

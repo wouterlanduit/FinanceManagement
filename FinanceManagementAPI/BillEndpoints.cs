@@ -14,9 +14,9 @@ namespace FinanceManagementAPI
         {
             var billGroup = app.MapGroup("/bills/");
             billGroup.MapGet("/", async (FinanceManagementDb db) => await db.Bills.ToListAsync())
-                .RequireAuthorization("Read");
+                .RequireAuthorization(Constants.Authorization.PolicyRead);
             billGroup.MapGet("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) => await db.Bills.FindAsync(id))
-                .RequireAuthorization("DetailedRead");
+                .RequireAuthorization(Constants.Authorization.PolicyDetailedRead);
             billGroup.MapPost("/", async (Bill bill, FinanceManagementDb db) =>
             {
                 db.Bills.Add(bill);
@@ -24,7 +24,7 @@ namespace FinanceManagementAPI
 
                 return Results.Created($"/bills/{bill.Id}", bill);
             })
-                .RequireAuthorization("Write");
+                .RequireAuthorization(Constants.Authorization.PolicyWrite);
         }
     }
 }

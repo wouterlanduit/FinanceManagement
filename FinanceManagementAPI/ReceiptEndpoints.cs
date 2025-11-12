@@ -14,9 +14,9 @@ namespace FinanceManagementAPI
         {
             var receiptGroup = app.MapGroup("/receipts/");
             receiptGroup.MapGet("/", async (FinanceManagementDb db) => await db.Receipts.ToListAsync())
-                .RequireAuthorization("Read");
+                .RequireAuthorization(Constants.Authorization.PolicyRead);
             receiptGroup.MapGet("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) => await db.Receipts.FindAsync(id))
-                .RequireAuthorization("DetailedRead");
+                .RequireAuthorization(Constants.Authorization.PolicyDetailedRead);
             receiptGroup.MapPost("/", async (Receipt receipt, FinanceManagementDb db) =>
             {
                 db.Receipts.Add(receipt);
@@ -24,7 +24,7 @@ namespace FinanceManagementAPI
 
                 return Results.Created($"/receipts/{receipt.Id}", receipt);
             })
-                .RequireAuthorization("Write");
+                .RequireAuthorization(Constants.Authorization.PolicyWrite);
             receiptGroup.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) =>
             {
                 IResult result = TypedResults.NotFound();
@@ -45,7 +45,7 @@ namespace FinanceManagementAPI
 
                 return result;
             })
-                .RequireAuthorization("Delete");
+                .RequireAuthorization(Constants.Authorization.PolicyDelete);
         }
     }
 }
