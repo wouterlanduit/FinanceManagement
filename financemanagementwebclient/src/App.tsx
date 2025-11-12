@@ -1,27 +1,24 @@
 import { FluentProvider, webDarkTheme } from '@fluentui/react-components';
 import './App.css'
-import MonthlyDetailsGrid from './components/MonthlyDetailsGrid/MonthlyDetailsGrid'
 import NavBar from './components/NavBar/NavBar'
-import { AIPDataSource, type DataSource } from './services/data-source-service'
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Expenses from './pages/Expenses';
+import Home from './pages/Home';
 
 function App() {
-    const ds: DataSource = new AIPDataSource();
-    ds.useDummyData = window.location.hostname === 'localhost';
-
     // TODO: react router
     return (
-        <>
+        <BrowserRouter>
             <FluentProvider theme={webDarkTheme}>
                 <div>
                     <NavBar />
-                    <MonthlyDetailsGrid
-                        name="September"
-                        source={ds}
-                        _ISDEBUG_={window.location.hostname === 'localhost'}
-                    />
-                    </div>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/expenses" element={<Expenses />} />
+                    </Routes>
+                </div>
             </FluentProvider>
-        </>
+        </BrowserRouter>
     )
 }
 
