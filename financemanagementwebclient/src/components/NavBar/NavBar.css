@@ -1,33 +1,44 @@
 nav {
-    width: 100%;
     background-color: black;
-    padding: 0;
-    margin: 0;
-}
-
-nav ul{
-    list-style-type: none;
-    overflow: hidden;
-    padding: 0;
-    margin: 0;
-}
-
-nav ul li {
-    display: inline;
-}
-
-nav ul a {
     color: white;
-    display: inline-block;
-    text-align: center;
-    padding: 14px 16px;
-    text-decoration: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    padding: 0 10px;
 }
 
-nav ul a:hover {
+nav ul {
+    list-style: none;
+    /*overflow: hidden;*/
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+nav a {
+    color: inherit;
+    /*display: inline-block;*/
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+}
+
+.nav-element {
+    padding: 14px 16px;
+}
+
+.nav-element:hover {
     background-color: #111111;
 }
 
-nav ul a.active {
+nav a.active {
     background-color: #04AA6D;
+}
+
+.nestednav-hide {
+    display: none;
+}
+
+.nestednav-show {
+    display:block;
 }

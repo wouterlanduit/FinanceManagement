@@ -153,8 +153,7 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
     //TODO check if we can use row.rowId as row key
     return (
         <>
-            {props._ISDEBUG_ && <p> { "DEBUG ENABLED"}</p>}
-            <p>{props.name}</p>
+            <h1>{props.name}</h1>
 
             <Toolbar>
                 <AddRecordDialog<ReceiptDTO>
