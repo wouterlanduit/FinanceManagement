@@ -53,30 +53,22 @@ const columns: TableColumnDefinition<ReceiptDTO>[] = [
 
 function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
     const [receipts, setReceipts] = useState<ReceiptDTO[] | null>(null);
+    const [sources, setSources] = useState<SourceDTO[] | null>(null);
     const [fetchingData, setFetchingData] = useState<boolean>(false);
 
-    // TODO fetch from DS
-    const sources: SourceDTO[] = [
-        {
-            id: 1,
-            name: "Store_1"
-        },
-        {
-            id: 2,
-            name: "Store_2"
-        },
-        {
-            id: 3,
-            name: "Store_3"
-        },
-    ];
+    const fetchData = async () => {
+        try {
+            setReceipts(await FetchReceipts(props.source));
+            setSources(await FetchSources(props.source));
+        }
+        finally {
+            setFetchingData(false);
+        }
+    }
 
     const triggerDataFetch = () => {
         if (fetchingData === false) {
-            GetData(props.source).then((value: ReceiptDTO[]) => {
-                setReceipts(value);
-                setFetchingData(false);
-            }).catch(() => setFetchingData(false)); //TODO show error?
+            fetchData(); //TODO show error?
             setFetchingData(true)
         }
     }
@@ -117,7 +109,7 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
     const rows = sort(getRows());
 
     const sourceDictionary: { [id: string]: string } = {};
-    sources.forEach((value: SourceDTO) => sourceDictionary[value.id.toString()] = value.name);
+    sources?.forEach((value: SourceDTO) => sourceDictionary[value.id.toString()] = value.name);
 
     const dialogFields: AddRecordDialogField<ReceiptDTO>[] = [
         {
@@ -126,7 +118,7 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
             required: true,
             setValue: (dto: ReceiptDTO, value: string) => {
                 dto.sourceid = Number(value);
-                dto.sourcename = sources.find((source: SourceDTO) => {
+                dto.sourcename = sources?.find((source: SourceDTO) => {
                     return source.id === dto.sourceid;
                 })?.name ?? "";
             },
@@ -215,8 +207,12 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
     );
 }
 
-async function GetData(source: DataSource): Promise<ReceiptDTO[]> {
+async function FetchReceipts(source: DataSource): Promise<ReceiptDTO[]> {
     return await DataSourceService.loadReceipts(source);
+}
+
+async function FetchSources(source: DataSource): Promise<SourceDTO[]> {
+    return await DataSourceService.loadSources(source);
 }
 
 export default MonthlyDetailsGrid;
