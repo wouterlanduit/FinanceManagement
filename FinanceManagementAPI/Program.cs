@@ -151,4 +151,6 @@ ReceiptEndpoints.Map(app);
 
 BillEndpoints.Map(app);
 
+MonthSummaryEndpoints.Map(app);
+
 app.Run();

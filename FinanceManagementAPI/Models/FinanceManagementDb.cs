@@ -9,5 +9,6 @@ namespace FinanceManagementAPI.Models
         public DbSet<Receipt> Receipts { get; set; } = null!;
         public DbSet<Bill> Bills { get; set; } = null!;
         public DbSet<Gift> Gifts { get; set; } = null!;
+        public DbSet<MonthSummary> MonthSummaries { get; set; } = null!;
     }
 }
