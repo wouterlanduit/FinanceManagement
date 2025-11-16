@@ -24,7 +24,7 @@ namespace FinanceManagementAPI
 
                 return Results.Created($"/bills/{bill.Id}", bill);
             })
-                .RequireAuthorization(Constants.Authorization.PolicyWrite);
+                .RequireAuthorization(Constants.Authorization.PolicyWriteData);
         }
     }
 }

@@ -44,7 +44,7 @@ namespace FinanceManagementAPI
 
                 return Results.Created($"/summaries/{summary.Id}", summary);
             })
-                .RequireAuthorization(Constants.Authorization.PolicyWrite);
+                .RequireAuthorization(Constants.Authorization.PolicyWriteData);
             summaryGroup.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) =>
             {
                 IResult result = TypedResults.NotFound();

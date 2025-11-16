@@ -98,9 +98,15 @@ builder.Services.AddAuthorization(builder =>
         policy
             .RequireAuthenticatedUser()
             .AddAuthenticationSchemes(DefaultAuthenticationSchema)
-            .RequireClaim("name", "test")
+            .RequireClaim("name", ["test", "API"])
             .RequireRole(Authorization.RoleAdmin));
-    builder.AddPolicy(Authorization.PolicyWrite, policy =>
+    builder.AddPolicy(Authorization.PolicyWriteData, policy =>
+        policy
+            .RequireAuthenticatedUser()
+            .AddAuthenticationSchemes(DefaultAuthenticationSchema)
+            .RequireClaim("name", ["test", "API"])
+            .RequireRole(Authorization.RoleAdmin));
+    builder.AddPolicy(Authorization.PolicyWriteSetup, policy =>
         policy
             .RequireAuthenticatedUser()
             .AddAuthenticationSchemes(DefaultAuthenticationSchema)

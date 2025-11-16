@@ -38,7 +38,7 @@ namespace FinanceManagementAPI
                 .Produces<Source>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status500InternalServerError)
-                .RequireAuthorization(Constants.Authorization.PolicyWrite);
+                .RequireAuthorization(Constants.Authorization.PolicyWriteSetup);
             sourceGroup.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) =>
             {
                 IResult result = TypedResults.NotFound();
