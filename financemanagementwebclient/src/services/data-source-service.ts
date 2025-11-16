@@ -119,7 +119,30 @@ export class AIPDataSource implements DataSource {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async addReceipt(_receipt: ReceiptDTO): Promise<boolean> {
-        throw new Error("Not implemented");
+        let ret: boolean = false;
+        const bearerToken: string = await this.getBearerToken();
+        const request: Request = new Request(
+            this.backendUrl + "/receipts",
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    sourceid: _receipt.sourceid,
+                    amount: _receipt.amount,
+                    date: _receipt.date.toISOString()
+                }),
+            }
+        );
+        request.headers.set("Authorization", "Bearer " + bearerToken);
+        request.headers.set("Content-Type", "application/json");
+
+        const resp: Response = await fetch(request);
+        if (!resp.ok) {
+            console.error("Failed to create receipt.");
+        } else {
+            ret = true;
+        }
+
+        return ret;
     }
 
     public async loadSources(): Promise<SourceDTO[]> {
