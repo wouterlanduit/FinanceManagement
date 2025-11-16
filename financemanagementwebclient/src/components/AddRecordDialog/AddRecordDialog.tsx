@@ -19,16 +19,18 @@ export interface IAddRecordDialogProps<TRecord> {
 }
 function AddRecordDialog<TRecord>(props: IAddRecordDialogProps<TRecord>) {
     const [open, setOpen] = useState(false);
+    const [creating, setCreating] = useState(false);
 
     const handleSubmit = (ev: React.FormEvent) => {
         ev.preventDefault();
 
         // TODO validate
-
+        setCreating(true);
         props.createRecord(record).then((created: boolean) => {
             if (created) {
                 setOpen(false);
             }
+            setCreating(false);
         });
     };
 
@@ -85,10 +87,10 @@ function AddRecordDialog<TRecord>(props: IAddRecordDialogProps<TRecord>) {
                             ))
                         }
                     </DialogContent>
-                    <DialogActions>
-                        <Button type="submit" appearance="primary">
-                            Create
-                        </Button>
+                        <DialogActions>
+                            <Button type="submit" appearance="primary" disabled={ creating }>
+                                Create
+                            </Button>
                         <DialogTrigger disableButtonEnhancement>
                             <Button appearance="secondary">Close</Button>
                         </DialogTrigger>
