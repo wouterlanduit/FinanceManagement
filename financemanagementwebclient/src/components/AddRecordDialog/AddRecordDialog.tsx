@@ -15,7 +15,7 @@ export interface IAddRecordDialogProps<TRecord> {
     _ISDEBUG_: boolean;
     fields: AddRecordDialogField<TRecord>[];
     initRecord: () => TRecord;
-    createRecord: (dto: TRecord) => boolean;
+    createRecord: (dto: TRecord) => Promise<boolean>;
 }
 function AddRecordDialog<TRecord>(props: IAddRecordDialogProps<TRecord>) {
     const [open, setOpen] = useState(false);
@@ -25,9 +25,11 @@ function AddRecordDialog<TRecord>(props: IAddRecordDialogProps<TRecord>) {
 
         // TODO validate
 
-        if (props.createRecord(record)) {
-            setOpen(false);
-        }
+        props.createRecord(record).then((created: boolean) => {
+            if (created) {
+                setOpen(false);
+            }
+        });
     };
 
     const record: TRecord = props.initRecord();

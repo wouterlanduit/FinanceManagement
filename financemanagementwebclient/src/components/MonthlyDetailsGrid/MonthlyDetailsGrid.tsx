@@ -160,11 +160,13 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
                             date: new Date()
                         };
                     }}
-                    createRecord={(a: ReceiptDTO) => {
-                        props.source.addReceipt(a);
-                        console.log(`record created. source:${a.sourcename} - amount: ${a.amount} - date:${a.date.toLocaleDateString('nl-be')}`);
-                        triggerDataFetch();
-                        return a.amount > 0;
+                    createRecord={async (a: ReceiptDTO) => {
+                        const created = await props.source.addReceipt(a);
+                        if (created) {
+                            console.log(`record created. source:${a.sourcename} - amount: ${a.amount} - date:${a.date.toLocaleDateString('nl-be')}`);
+                            triggerDataFetch();
+                        }
+                        return created;
                     }}
                 />
                 <ToolbarButton aria-label="Refresh" onClick={triggerDataFetch}>Refresh</ToolbarButton>
