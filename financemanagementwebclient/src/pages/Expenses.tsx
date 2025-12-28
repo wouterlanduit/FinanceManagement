@@ -1,14 +1,14 @@
 import MonthlyDetailsGrid from "../components/MonthlyDetailsGrid/MonthlyDetailsGrid";
-import { AIPDataSource, DummyDataSource, type DataSource } from "../services/data-source-service";
+import { type DataSource } from "../services/data-source-service";
 
-function Expenses() {
-    const ds: DataSource = new AIPDataSource();
-    ds.useDummyData = window.location.hostname === 'localhost';
-
+export interface IExpensesProps {
+    datasource: DataSource
+}
+function Expenses(props: IExpensesProps) {
     return <div className="content">
         <MonthlyDetailsGrid
             name="September"
-            source={ds}
+            source={props.datasource}
             _ISDEBUG_={window.location.hostname === 'localhost'}
         />
     </div>;

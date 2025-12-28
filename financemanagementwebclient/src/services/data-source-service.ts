@@ -8,6 +8,7 @@ export interface DataSource {
     loadSources(): Promise<SourceDTO[]>;
 
     addReceipt(receipt: ReceiptDTO): Promise<boolean>;
+    addSource(source: SourceDTO): Promise<boolean>;
 }
 
 export class DummyDataSource implements DataSource {
@@ -60,6 +61,10 @@ export class DummyDataSource implements DataSource {
 
     public async loadSources(): Promise<SourceDTO[]> {
         return this.sources;
+    }
+
+    public async addSource(source: SourceDTO): Promise<boolean> {
+        return this.sources.push(source) > 0;
     }
 }
 
@@ -117,26 +122,16 @@ export class AIPDataSource implements DataSource {
         })?.name ?? "";
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async addReceipt(_receipt: ReceiptDTO): Promise<boolean> {
         let ret: boolean = false;
-        const bearerToken: string = await this.getBearerToken();
-        const request: Request = new Request(
-            this.backendUrl + "/receipts",
-            {
-                method: "POST",
-                body: JSON.stringify({
-                    sourceid: _receipt.sourceid,
-                    amount: _receipt.amount,
-                    date: _receipt.date.toISOString()
-                }),
-            }
-        );
-        request.headers.set("Authorization", "Bearer " + bearerToken);
-        request.headers.set("Content-Type", "application/json");
 
-        const resp: Response = await fetch(request);
-        if (!resp.ok) {
+        const requestBody: string = JSON.stringify({
+            sourceid: _receipt.sourceid,
+            amount: _receipt.amount,
+            date: _receipt.date.toISOString()
+        });
+
+        if (!this.executeCreate(requestBody, "/receipts")) {
             console.error("Failed to create receipt.");
         } else {
             ret = true;
@@ -167,6 +162,43 @@ export class AIPDataSource implements DataSource {
         }
 
         return this.sources;
+    }
+
+    public async addSource(_source: SourceDTO): Promise<boolean> {
+        let ret: boolean = false;
+
+        const requestBody: string = JSON.stringify({
+            name: _source.name
+        });
+
+        if (!this.executeCreate(requestBody, "/sources")) {
+            console.error("Failed to create source.");
+        } else {
+            ret = true;
+        }
+
+        return ret;
+    }
+
+    private async executeCreate(_body: string, _endpoint: string): Promise<boolean> {
+        let ret: boolean = false;
+        const bearerToken: string = await this.getBearerToken();
+        const request: Request = new Request(
+            this.backendUrl + _endpoint,
+            {
+                method: "POST",
+                body: _body,
+            }
+        );
+        request.headers.set("Authorization", "Bearer " + bearerToken);
+        request.headers.set("Content-Type", "application/json");
+
+        const resp: Response = await fetch(request);
+        if (resp.ok) {
+            ret = true;
+        }
+
+        return ret;
     }
 }
 
