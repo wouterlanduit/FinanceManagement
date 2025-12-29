@@ -2,10 +2,11 @@ import { Button, Combobox, Dialog, DialogActions, DialogBody, DialogContent, Dia
 import { useState } from "react";
 import './AddRecordDialog.css'
 import { FluentProvider, webDarkTheme } from '@fluentui/react-components';
+import type { ColumnType } from '../../models/types'
 
 export type AddRecordDialogField<TRecord> = {
     name: string;
-    type?: "date" | "number" | "text" | "combobox";
+    type?: ColumnType;
     required?: boolean;
     setValue: (dto: TRecord, valueStr: string) => void;
     options?: { [id: string] : string };

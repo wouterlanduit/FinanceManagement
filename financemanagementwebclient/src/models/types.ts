@@ -1,0 +1,1 @@
+export type ColumnType = "date" | "number" | "text" | "combobox";

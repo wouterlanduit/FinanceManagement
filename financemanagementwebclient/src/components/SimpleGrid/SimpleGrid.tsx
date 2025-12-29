@@ -2,33 +2,29 @@ import { useState } from 'react';
 import { type DataSource }  from '../../services/data-source-service'
 import { createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, Toolbar, ToolbarButton, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
 import AddRecordDialog, { type AddRecordDialogField } from '../AddRecordDialog/AddRecordDialog';
-import type { SourceDTO } from '../../models/source-dto';
+import type { ColumnType } from '../../models/types'
 
-export interface ISimpleGridProps {
-    _ISDEBUG_: boolean,
-    source: DataSource,
-    fetch: (datasource: DataSource) => Promise<SourceDTO[]>,
-    //columns: TableColumnDefinition<SourceDTO>[]
+export interface SimpleGridColumn<T> {
+    name: string;
+    type: ColumnType;
+    required: boolean;
+    setValue: (dto: T, value: string) => void;
+    renderValue: (item: T) => React.ReactNode;
+    compare: (a: T, b: T) => number;
 }
 
+export interface ISimpleGridProps<T> {
+    _ISDEBUG_: boolean,
+    source: DataSource,
+    fetch: (datasource: DataSource) => Promise<T[]>,
+    columns: SimpleGridColumn<T>[],
+    getRowId: (item: T) => number,
+    initRecord: () => T,
+    createRecord: (record: T) => Promise<boolean>
+}
 
-const columns: TableColumnDefinition<SourceDTO>[] = [
-    createTableColumn<SourceDTO>({
-        columnId: "name",
-        compare: (a, b) => {
-            return a.name.localeCompare(b.name);
-        },
-        renderHeaderCell: () => {
-            return "Name";
-        },
-        renderCell: (item) => {
-            return item.name;
-        }
-    })
-]
-
-function SimpleGrid(props: ISimpleGridProps) {
-    const [data, setData] = useState<SourceDTO[] | null>(null);
+function SimpleGrid<T>(props: ISimpleGridProps<T>) {
+    const [data, setData] = useState<T[] | null>(null);
     const [fetchingData, setFetchingData] = useState<boolean>(false);
 
     const fetchData = async () => {
@@ -50,6 +46,19 @@ function SimpleGrid(props: ISimpleGridProps) {
     if (data === null && fetchingData === false) {
         triggerDataFetch();
     }
+
+    const columns: TableColumnDefinition<T>[] = props.columns.map(column => {
+        return createTableColumn<T>({
+            columnId: column.name,
+            compare: (a, b) => {
+                return column.compare(a, b);
+            },
+            renderHeaderCell: () => {
+                return column.name;
+            },
+            renderCell: column.renderValue
+        })
+    });
 
     const {
         getRows,
@@ -82,34 +91,27 @@ function SimpleGrid(props: ISimpleGridProps) {
 
     const rows = sort(getRows());
 
-    const dialogFields: AddRecordDialogField<SourceDTO>[] = [
-        {
-            name: "name",
-            type: "text",
-            required: true,
-            setValue: (dto: SourceDTO, value: string) => {
-                dto.name = value;
-            }
+    const dialogFields: AddRecordDialogField<T>[] = props.columns.map(column => {
+        return {
+            name: column.name,
+            type: column.type,
+            required: column.required,
+            setValue: column.setValue
         }
-    ]
+    });
 
     //TODO check if we can use row.rowId as row key
     return (
         <>
             <Toolbar>
-                <AddRecordDialog<SourceDTO>
+                <AddRecordDialog<T>
                     _ISDEBUG_={props._ISDEBUG_}
                     fields={dialogFields}
-                    initRecord={() => {
-                        return {
-                            id: 0,
-                            name: ""
-                        };
-                    }}
-                    createRecord={async (a: SourceDTO) => {
-                        const created = await props.source.addSource(a);
+                    initRecord={props.initRecord}
+                    createRecord={async (a: T) => {
+                        const created = await props.createRecord(a);
                         if (created) {
-                            console.log(`record created. name:${a.name}`);
+                            console.log(`record created. name:${props.getRowId(a)}`);
                             triggerDataFetch();
                         }
                         return created;
@@ -141,7 +143,7 @@ function SimpleGrid(props: ISimpleGridProps) {
                     </TableHeader>
                     <TableBody>
                         {rows.map((row) => (
-                            <TableRow key={row.item.id}>
+                            <TableRow key={props.getRowId(row.item)}>
                                 {columns.map((column) => (
                                     <TableCell>
                                         {column.renderCell(row.item)}
