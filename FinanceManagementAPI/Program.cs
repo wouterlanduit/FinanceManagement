@@ -1,7 +1,8 @@
 using FinanceManagementAPI;
-using FinanceManagementAPI.Models;
 using FinanceManagementAPI.Constants;
+using FinanceManagementAPI.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -26,7 +27,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // TODO create config file
 var connectionString = builder.Configuration.GetConnectionString("FinancesDb") ?? "Data source=Finances.db";
-string DefaultAuthenticationSchema = JwtBearerDefaults.AuthenticationScheme;
+string DefaultAuthenticationSchema = CookieAuthenticationDefaults.AuthenticationScheme;//JwtBearerDefaults.AuthenticationScheme;
 string SignKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 
 builder.Services.AddEndpointsApiExplorer();
@@ -73,7 +74,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddAuthentication(DefaultAuthenticationSchema)
-    .AddJwtBearer(DefaultAuthenticationSchema ,options =>
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
     {
         options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters()
@@ -82,6 +83,10 @@ builder.Services.AddAuthentication(DefaultAuthenticationSchema)
             ValidateAudience = false,   // TODO true
             ValidateIssuer = false,     // TODO true
         };
+    })
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    {
+        options.Cookie.Name = "_general_";
     })
     .AddScheme<AuthenticationSchemeOptions, FinanceAuthenticationHandler>("FinanceScheme", options =>
     {

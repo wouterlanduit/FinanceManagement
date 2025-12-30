@@ -77,7 +77,7 @@ export class AIPDataSource implements DataSource {
     public async getBearerToken(): Promise<string> {
         if (this.bearerToken === "") {
             // TODO get bearer
-            const resp: Response = await fetch(this.backendUrl + "/login?name=API&apiKey=test", {
+            const resp: Response = await fetch(this.backendUrl + "/login/bearer?name=API&apiKey=test", {
                 method: "POST"
             });
             if (!resp.ok) {
