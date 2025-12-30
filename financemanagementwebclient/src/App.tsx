@@ -9,7 +9,7 @@ import Sources from './pages/Sources';
 import { AIPDataSource, DummyDataSource, type DataSource } from "./services/data-source-service";
 
 function App() {
-    const ds: DataSource = new DummyDataSource();//new AIPDataSource();
+    const ds: DataSource = new AIPDataSource();//new DummyDataSource();
     ds.useDummyData = window.location.hostname === 'localhost';
 
     return (

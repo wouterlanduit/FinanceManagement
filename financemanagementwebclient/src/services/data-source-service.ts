@@ -1,5 +1,6 @@
 import type { ReceiptDTO, ReceiptResponseJSON } from '../models/receipt-dto';
 import type { SourceDTO, SourceResponseJSON } from '../models/source-dto';
+import { AuthenticationHelper } from './authentication-helper';
 
 export interface DataSource {
     useDummyData: boolean;
@@ -75,18 +76,9 @@ export class AIPDataSource implements DataSource {
     sources: SourceDTO[] = [];
 
     public async getBearerToken(): Promise<string> {
+        // TODO check token expiry
         if (this.bearerToken === "") {
-            // TODO get bearer
-            const resp: Response = await fetch(this.backendUrl + "/login/bearer?name=API&apiKey=test", {
-                method: "POST"
-            });
-            if (!resp.ok) {
-                throw new Error("Failed to login.");
-            }
-            // TODO womee: return json with token en expiry
-            const jsonResult = await resp.text();
-            // TODO do we need to get a specific property?
-            this.bearerToken = jsonResult;
+            this.bearerToken = await new AuthenticationHelper().getBearerToken();
         }
 
         return this.bearerToken;

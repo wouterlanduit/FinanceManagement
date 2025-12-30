@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import './NavBar.css'
 import { useState } from 'react';
+import { AuthenticationHelper } from '../../services/authentication-helper';
 
 function NavBar() {
     const [showSetupDropdown, setShowSetupDropdown] = useState(false);
@@ -22,7 +23,7 @@ function NavBar() {
                 
             </li>
         </ul>
-        {!loggedIn && <button>Log In</button>}
+        {!loggedIn && <button onClick={() => new AuthenticationHelper().login()}>Log In</button>}
     </nav>
 }
 
