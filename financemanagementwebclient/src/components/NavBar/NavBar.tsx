@@ -23,7 +23,14 @@ function NavBar() {
                 
             </li>
         </ul>
-        {!loggedIn && <button onClick={() => new AuthenticationHelper().login()}>Log In</button>}
+        {!loggedIn && <button onClick={() => {
+            new AuthenticationHelper().login();
+            setLoggedIn(true);
+        }}>Log In</button>}
+        {loggedIn && <button onClick={() => {
+            console.log("not implemented");
+            setLoggedIn(false);
+        }}>Log Out</button>}
     </nav>
 }
 

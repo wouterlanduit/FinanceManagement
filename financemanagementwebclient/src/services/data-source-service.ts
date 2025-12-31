@@ -74,6 +74,9 @@ export class AIPDataSource implements DataSource {
     bearerToken: string = "";
     backendUrl: string = "http://localhost:5265";
     sources: SourceDTO[] = [];
+    defaultFetchOptions: RequestInit = {
+        credentials: "include"
+    }
 
     public async getBearerToken(): Promise<string> {
         // TODO check token expiry
@@ -90,7 +93,7 @@ export class AIPDataSource implements DataSource {
         const bearerToken: string = await this.getBearerToken();
         const request: Request = new Request(this.backendUrl + "/receipts");
         request.headers.set("Authorization", "Bearer " + bearerToken);
-        const resp: Response = await fetch(request);
+        const resp: Response = await fetch(request, this.defaultFetchOptions);
         if (!resp.ok) {
             throw new Error("Failed to fetch receipts.");
         }
@@ -138,7 +141,7 @@ export class AIPDataSource implements DataSource {
             const request: Request = new Request(this.backendUrl + "/sources");
             request.headers.set("Authorization", "Bearer " + bearerToken);
 
-            const resp: Response = await fetch(request);
+            const resp: Response = await fetch(request, this.defaultFetchOptions);
             if (!resp.ok) {
                 throw new Error("Failed to fetch sources.");
             }
@@ -185,7 +188,7 @@ export class AIPDataSource implements DataSource {
         request.headers.set("Authorization", "Bearer " + bearerToken);
         request.headers.set("Content-Type", "application/json");
 
-        const resp: Response = await fetch(request);
+        const resp: Response = await fetch(request, this.defaultFetchOptions);
         if (resp.ok) {
             ret = true;
         }

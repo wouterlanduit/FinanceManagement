@@ -130,11 +130,12 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(
         policy =>
         {
-            // TODO check how to specify origin correctly
-            //policy.WithOrigins("http://localhost");
-            policy.AllowAnyOrigin();
+            // TODO check how to specify origin correctly -> check the origin in the request and copy if allowed
+            policy.WithOrigins("http://localhost:51829");
+            //policy.AllowAnyOrigin();
             policy.AllowAnyMethod();
             policy.AllowAnyHeader();
+            policy.AllowCredentials();
         });
 });
 
