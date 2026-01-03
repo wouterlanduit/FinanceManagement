@@ -29,6 +29,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("FinancesDb") ?? "Data source=Finances.db";
 string DefaultAuthenticationSchema = CookieAuthenticationDefaults.AuthenticationScheme;//JwtBearerDefaults.AuthenticationScheme;
 string SignKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+string[] allowedOrigins = { "http://localhost:51829" };
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -86,6 +87,8 @@ builder.Services.AddAuthentication(DefaultAuthenticationSchema)
     })
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
+        options.LoginPath = "/authentication/login";
+        options.LogoutPath = "/authentication/logout";
         options.Cookie.Name = "_general_";
     })
     .AddScheme<AuthenticationSchemeOptions, FinanceAuthenticationHandler>("FinanceScheme", options =>
@@ -130,8 +133,7 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(
         policy =>
         {
-            // TODO check how to specify origin correctly -> check the origin in the request and copy if allowed
-            policy.WithOrigins("http://localhost:51829");
+            policy.WithOrigins(allowedOrigins);
             //policy.AllowAnyOrigin();
             policy.AllowAnyMethod();
             policy.AllowAnyHeader();

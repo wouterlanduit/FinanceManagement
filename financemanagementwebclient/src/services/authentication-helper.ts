@@ -1,11 +1,17 @@
+import type { loggedInStatus, loggedInStatusResponse } from "../models/login";
+
 export class AuthenticationHelper {
     backendUrl: string = "http://localhost:5265";
+    defaultFetchOptions: RequestInit = {
+        credentials: "include"
+    }
 
     public async getBearerToken(): Promise<string> {
         let bearerToken: string = "";
 
         try {
             const resp: Response = await fetch(this.backendUrl + "/authenticate/bearer?name=API&apiKey=test", {
+                ...this.defaultFetchOptions,
                 method: "POST"
             });
             if (!resp.ok) {
@@ -26,6 +32,7 @@ export class AuthenticationHelper {
 
     public async login() {
         const resp: Response = await fetch(this.backendUrl + "/authenticate/login?name=API&apiKey=test", {
+            ...this.defaultFetchOptions,
             method: "POST"
         });
 
@@ -42,5 +49,22 @@ export class AuthenticationHelper {
         if (!resp.ok) {
             throw new Error("Failed to logout.");
         }        
+    }
+
+    public async checkLoginStatus(): Promise<loggedInStatus> {
+        const resp: Response = await fetch(this.backendUrl + "/authenticate/check-login-status", {
+            ...this.defaultFetchOptions,
+            method: "GET"
+        });
+
+        if (!resp.ok) {
+            throw new Error("Failed to check login status.");
+        }
+
+        const jsonResult: loggedInStatusResponse = await resp.json();
+
+        return {
+            loggedIn: jsonResult.loggedIn
+        }
     }
 }

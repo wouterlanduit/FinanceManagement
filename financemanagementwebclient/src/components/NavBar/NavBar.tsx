@@ -2,12 +2,21 @@ import { NavLink } from 'react-router-dom';
 import './NavBar.css'
 import { useState } from 'react';
 import { AuthenticationHelper } from '../../services/authentication-helper';
+import type { loggedInStatus } from '../../models/login';
 
 function NavBar() {
     const [showSetupDropdown, setShowSetupDropdown] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
 
     const collapseDropdowns = () => { setShowSetupDropdown(false); };
+
+    const evaluateLoggedIn = () => {
+        new AuthenticationHelper().checkLoginStatus().then((loggedInStatus: loggedInStatus) => {
+            setLoggedIn(loggedInStatus.loggedIn);
+        }).catch(() => {
+            setLoggedIn(false);
+        });
+    };
 
     return <nav>
         <ul>
@@ -24,12 +33,10 @@ function NavBar() {
             </li>
         </ul>
         {!loggedIn && <button onClick={() => {
-            new AuthenticationHelper().login();
-            setLoggedIn(true);
+            new AuthenticationHelper().login().then(evaluateLoggedIn);
         }}>Log In</button>}
         {loggedIn && <button onClick={() => {
-            new AuthenticationHelper().logout();
-            setLoggedIn(false);
+            new AuthenticationHelper().logout().then(evaluateLoggedIn);
         }}>Log Out</button>}
     </nav>
 }

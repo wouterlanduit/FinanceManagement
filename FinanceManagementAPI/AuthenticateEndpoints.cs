@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using FinanceManagementAPI.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -12,8 +13,8 @@ namespace FinanceManagementAPI
     {
         public static void Map(WebApplication app, string signKey)
         {
-            var loginGroup = app.MapGroup("/authenticate/");
-            loginGroup.MapPost("/bearer", (
+            var authenticateGroup = app.MapGroup("/authenticate/");
+            authenticateGroup.MapPost("/bearer", (
                 [FromQuery] string? name,
                 [FromQuery] string? apiKey) =>
             {
@@ -44,7 +45,7 @@ namespace FinanceManagementAPI
             })
                 .AllowAnonymous();
 
-            loginGroup.MapPost("/login", async (
+            authenticateGroup.MapPost("/login", async (
                 [FromQuery] string? name,
                 [FromQuery] string? apiKey,
                 HttpContext ctx) =>
@@ -72,7 +73,8 @@ namespace FinanceManagementAPI
                 return TypedResults.Ok();
             })
                 .AllowAnonymous();
-            loginGroup.MapPost("/logout", async (
+
+            authenticateGroup.MapPost("/logout", async (
                 HttpContext ctx) =>
             {
                 await ctx.SignOutAsync();
@@ -80,6 +82,22 @@ namespace FinanceManagementAPI
                 return TypedResults.Ok();
             })
                 .AllowAnonymous();
+
+            authenticateGroup.MapGet("/check-login-status", (
+                HttpContext ctx) =>
+            {
+                return Results.Ok<CheckLoginStatusResponse>(new CheckLoginStatusResponse
+                {
+                    loggedIn = ctx.User?.Identity?.IsAuthenticated??false
+                });
+            })
+                .Produces<CheckLoginStatusResponse>(StatusCodes.Status200OK)
+                .AllowAnonymous();
         }
+    }
+
+    public class CheckLoginStatusResponse
+    {
+        public bool loggedIn { get; set; }
     }
 }
