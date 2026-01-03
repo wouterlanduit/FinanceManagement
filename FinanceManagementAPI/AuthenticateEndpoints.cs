@@ -8,11 +8,11 @@ using System.Security.Claims;
 
 namespace FinanceManagementAPI
 {
-    public static class LoginEndpoints
+    public static class AuthenticateEndpoints
     {
         public static void Map(WebApplication app, string signKey)
         {
-            var loginGroup = app.MapGroup("/login/");
+            var loginGroup = app.MapGroup("/authenticate/");
             loginGroup.MapPost("/bearer", (
                 [FromQuery] string? name,
                 [FromQuery] string? apiKey) =>
@@ -44,7 +44,7 @@ namespace FinanceManagementAPI
             })
                 .AllowAnonymous();
 
-            loginGroup.MapPost("/cookie", async (
+            loginGroup.MapPost("/login", async (
                 [FromQuery] string? name,
                 [FromQuery] string? apiKey,
                 HttpContext ctx) =>
@@ -68,6 +68,14 @@ namespace FinanceManagementAPI
                 await ctx.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,
                     new ClaimsPrincipal(identity));
+
+                return TypedResults.Ok();
+            })
+                .AllowAnonymous();
+            loginGroup.MapPost("/logout", async (
+                HttpContext ctx) =>
+            {
+                await ctx.SignOutAsync();
 
                 return TypedResults.Ok();
             })

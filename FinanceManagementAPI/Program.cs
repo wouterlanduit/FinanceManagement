@@ -155,7 +155,7 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
-LoginEndpoints.Map(app, SignKey);
+AuthenticateEndpoints.Map(app, SignKey);
 
 SourceEndpoints.Map(app);
 

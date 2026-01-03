@@ -28,7 +28,7 @@ function NavBar() {
             setLoggedIn(true);
         }}>Log In</button>}
         {loggedIn && <button onClick={() => {
-            console.log("not implemented");
+            new AuthenticationHelper().logout();
             setLoggedIn(false);
         }}>Log Out</button>}
     </nav>

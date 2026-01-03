@@ -88,27 +88,34 @@ export class AIPDataSource implements DataSource {
     }
 
     public async loadReceipts(): Promise<ReceiptDTO[]> {
-        await this.loadSources();
+        try {
+            const bearerToken: string = await this.getBearerToken();
+            const request: Request = new Request(this.backendUrl + "/receipts");
+            request.headers.set("Authorization", "Bearer " + bearerToken);
+            const resp: Response = await fetch(request, this.defaultFetchOptions);
+            if (!resp.ok) {
+                throw new Error("Failed to fetch receipts.");
+            }
 
-        const bearerToken: string = await this.getBearerToken();
-        const request: Request = new Request(this.backendUrl + "/receipts");
-        request.headers.set("Authorization", "Bearer " + bearerToken);
-        const resp: Response = await fetch(request, this.defaultFetchOptions);
-        if (!resp.ok) {
-            throw new Error("Failed to fetch receipts.");
+            const jsonResult: ReceiptResponseJSON[] = await resp.json();
+
+            await this.loadSources();
+
+            return jsonResult.map(value => {
+                return {
+                    id: value.id ?? 0,
+                    amount: value.amount ?? 0,
+                    date: new Date(value.date ?? ""),
+                    sourceid: value.sourceId ?? 0,
+                    sourcename: this.translateSourceId(value.sourceId ?? 0)
+                }
+            });
+        }
+        catch (e) {
+            console.log(e);
         }
 
-        const jsonResult: ReceiptResponseJSON[] = await resp.json();
-
-        return jsonResult.map(value => {
-            return {
-                id: value.id ?? 0,
-                amount: value.amount ?? 0,
-                date: new Date(value.date ?? ""),
-                sourceid: value.sourceId ?? 0,
-                sourcename: this.translateSourceId(value.sourceId ?? 0)
-            }
-        });
+        return [];
     }
 
     private translateSourceId(sourceId: number): string {
@@ -120,16 +127,21 @@ export class AIPDataSource implements DataSource {
     public async addReceipt(_receipt: ReceiptDTO): Promise<boolean> {
         let ret: boolean = false;
 
-        const requestBody: string = JSON.stringify({
-            sourceid: _receipt.sourceid,
-            amount: _receipt.amount,
-            date: _receipt.date.toISOString()
-        });
+        try {
+            const requestBody: string = JSON.stringify({
+                sourceid: _receipt.sourceid,
+                amount: _receipt.amount,
+                date: _receipt.date.toISOString()
+            });
 
-        if (!this.executeCreate(requestBody, "/receipts")) {
-            console.error("Failed to create receipt.");
-        } else {
-            ret = true;
+            if (!this.executeCreate(requestBody, "/receipts")) {
+                console.error("Failed to create receipt.");
+            } else {
+                ret = true;
+            }
+        }
+        catch (e) {
+            console.log(e);
         }
 
         return ret;
@@ -137,23 +149,31 @@ export class AIPDataSource implements DataSource {
 
     public async loadSources(): Promise<SourceDTO[]> {
         if (this.sources.length <= 0) {
-            const bearerToken: string = await this.getBearerToken();
-            const request: Request = new Request(this.backendUrl + "/sources");
-            request.headers.set("Authorization", "Bearer " + bearerToken);
-
-            const resp: Response = await fetch(request, this.defaultFetchOptions);
-            if (!resp.ok) {
-                throw new Error("Failed to fetch sources.");
-            }
-
-            const jsonResult: SourceResponseJSON[] = await resp.json();
-
-            this.sources = jsonResult.map(value => {
-                return {
-                    id: value.id ?? 0,
-                    name: value.name ?? 0
+            try {
+                const request: Request = new Request(this.backendUrl + "/sources");
+                const bearerToken: string = await this.getBearerToken();
+                if (bearerToken) {
+                    request.headers.set("Authorization", "Bearer " + bearerToken);
                 }
-            });
+
+                const resp: Response = await fetch(request, this.defaultFetchOptions);
+                if (!resp.ok) {
+                    throw new Error("Failed to fetch sources.");
+                }
+
+                const jsonResult: SourceResponseJSON[] = await resp.json();
+
+                this.sources = jsonResult.map(value => {
+                    return {
+                        id: value.id ?? 0,
+                        name: value.name ?? 0
+                    }
+                });
+            }
+            catch (e) {
+                console.log(e);
+            }
+            
         }
 
         return this.sources;
