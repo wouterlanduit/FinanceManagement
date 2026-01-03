@@ -42,7 +42,7 @@ builder.Services.AddSwaggerGen(c =>
     });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Scheme = JwtBearerDefaults.AuthenticationScheme,
+        Scheme = Authentication.BearerScheme,
         In = ParameterLocation.Header,
         Name = "Authorization",
         Type = SecuritySchemeType.ApiKey
@@ -74,8 +74,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-builder.Services.AddAuthentication(DefaultAuthenticationSchema)
-    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+builder.Services.AddAuthentication(Authentication.DefaultScheme)
+    .AddJwtBearer(Authentication.BearerScheme, options =>
     {
         options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters()
@@ -85,7 +85,7 @@ builder.Services.AddAuthentication(DefaultAuthenticationSchema)
             ValidateIssuer = false,     // TODO true
         };
     })
-    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    .AddCookie(Authentication.CookieScheme, options =>
     {
         options.LoginPath = "/authentication/login";
         options.LogoutPath = "/authentication/logout";
@@ -101,29 +101,29 @@ builder.Services.AddAuthorization(builder =>
     builder.AddPolicy(Authorization.PolicyRead, policy =>
         policy
             .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(DefaultAuthenticationSchema));
+            .AddAuthenticationSchemes(Authentication.SupportedSchemes));
     builder.AddPolicy(Authorization.PolicyDetailedRead, policy =>
         policy
             .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(DefaultAuthenticationSchema)
+            .AddAuthenticationSchemes(Authentication.SupportedSchemes)
             .RequireClaim("name", ["test", "API"])
             .RequireRole(Authorization.RoleAdmin));
     builder.AddPolicy(Authorization.PolicyWriteData, policy =>
         policy
             .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(DefaultAuthenticationSchema)
+            .AddAuthenticationSchemes(Authentication.SupportedSchemes)
             .RequireClaim("name", ["test", "API"])
             .RequireRole(Authorization.RoleAdmin));
     builder.AddPolicy(Authorization.PolicyWriteSetup, policy =>
         policy
             .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(DefaultAuthenticationSchema)
+            .AddAuthenticationSchemes(Authentication.SupportedSchemes)
             .RequireClaim("name", "test")
             .RequireRole(Authorization.RoleAdmin));
     builder.AddPolicy(Authorization.PolicyDelete, policy =>
         policy
             .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes(DefaultAuthenticationSchema)
+            .AddAuthenticationSchemes(Authentication.SupportedSchemes)
             .RequireClaim("name", "test")
             .RequireRole(Authorization.RoleAdmin));
 });
