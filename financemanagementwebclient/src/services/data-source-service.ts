@@ -3,8 +3,6 @@ import type { SourceDTO, SourceResponseJSON } from '../models/source-dto';
 import { AuthenticationHelper } from './authentication-helper';
 
 export interface DataSource {
-    useDummyData: boolean;
-
     loadReceipts(): Promise<ReceiptDTO[]>;
     loadSources(): Promise<SourceDTO[]>;
 
@@ -13,7 +11,6 @@ export interface DataSource {
 }
 
 export class DummyDataSource implements DataSource {
-    useDummyData: boolean = true;
     receipts: ReceiptDTO[] = [
         {
             id: 1,
@@ -70,7 +67,6 @@ export class DummyDataSource implements DataSource {
 }
 
 export class AIPDataSource implements DataSource {
-    useDummyData: boolean = false;
     bearerToken: string = "";
     backendUrl: string = "http://localhost:5265";
     sources: SourceDTO[] = [];
@@ -218,8 +214,6 @@ export class AIPDataSource implements DataSource {
 }
 
 export class DataSourceService {
-    useDummyData: boolean = false
-
     public static async loadReceipts(source: DataSource): Promise<ReceiptDTO[]> {
         return source.loadReceipts();
     }

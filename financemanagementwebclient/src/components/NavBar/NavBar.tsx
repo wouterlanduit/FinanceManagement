@@ -4,19 +4,16 @@ import { useState } from 'react';
 import { AuthenticationHelper } from '../../services/authentication-helper';
 import type { loggedInStatus } from '../../models/login';
 
-function NavBar() {
+export interface INavBarProps {
+    logIn: () => void,
+    logOut: () => void,
+    loggedIn: boolean
+}
+
+function NavBar(props: INavBarProps) {
     const [showSetupDropdown, setShowSetupDropdown] = useState(false);
-    const [loggedIn, setLoggedIn] = useState(false);
 
     const collapseDropdowns = () => { setShowSetupDropdown(false); };
-
-    const evaluateLoggedIn = () => {
-        new AuthenticationHelper().checkLoginStatus().then((loggedInStatus: loggedInStatus) => {
-            setLoggedIn(loggedInStatus.loggedIn);
-        }).catch(() => {
-            setLoggedIn(false);
-        });
-    };
 
     return <nav>
         <ul>
@@ -32,12 +29,8 @@ function NavBar() {
                 
             </li>
         </ul>
-        {!loggedIn && <button onClick={() => {
-            new AuthenticationHelper().login().then(evaluateLoggedIn);
-        }}>Log In</button>}
-        {loggedIn && <button onClick={() => {
-            new AuthenticationHelper().logout().then(evaluateLoggedIn);
-        }}>Log Out</button>}
+        {!props.loggedIn && <button onClick={props.logIn}>Log In</button>}
+        {props.loggedIn && <button onClick={props.logOut}>Log Out</button>}
     </nav>
 }
 
