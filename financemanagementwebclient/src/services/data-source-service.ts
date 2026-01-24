@@ -1,6 +1,6 @@
 import type { ReceiptDTO, ReceiptResponseJSON } from '../models/receipt-dto';
 import type { SourceDTO, SourceResponseJSON } from '../models/source-dto';
-import { AuthenticationHelper } from './authentication-helper';
+import { AuthenticationHelper } from './authentication-service';
 
 export interface DataSource {
     loadReceipts(): Promise<ReceiptDTO[]>;

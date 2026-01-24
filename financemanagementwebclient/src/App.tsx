@@ -7,22 +7,24 @@ import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import Sources from './pages/Sources';
 import { AIPDataSource, DummyDataSource, type DataSource } from "./services/data-source-service";
-import { AuthenticationHelper } from './services/authentication-helper';
+import { AuthenticationHelper, DummyAuthenticationHelper } from './services/authentication-service';
 import type { loggedInStatus } from './models/login';
 
 interface IAppProps {
     loggedInUser?: boolean,
-    datasource: DataSource
+    datasource: DataSource,
+    authenticationHelper: AuthenticationHelper
 }
 
 function App() {
     const [props, setProps] = useState<IAppProps>({
         loggedInUser: undefined,
-        datasource: new AIPDataSource()//new DummyDataSource();
+        datasource: new DummyDataSource(), //new AIPDataSource()//
+        authenticationHelper: new DummyAuthenticationHelper()
     });
 
     const evaluateLoggedIn = () => {
-        new AuthenticationHelper().checkLoginStatus().then((loggedInStatus: loggedInStatus) => {
+        props.authenticationHelper.checkLoginStatus().then((loggedInStatus: loggedInStatus) => {
             setProps({ ...props, loggedInUser: loggedInStatus.loggedIn });
         }).catch(() => {
             setProps({ ...props, loggedInUser: false });
@@ -39,8 +41,8 @@ function App() {
         <BrowserRouter>
             <div>
                 <NavBar
-                    logIn={() => { new AuthenticationHelper().login().then(evaluateLoggedIn) }}
-                    logOut={() => { new AuthenticationHelper().logout().then(evaluateLoggedIn) }}
+                    logIn={() => { props.authenticationHelper.login().then(evaluateLoggedIn) }}
+                    logOut={() => { props.authenticationHelper.logout().then(evaluateLoggedIn) }}
                     loggedIn={props.loggedInUser??false}
                 />
                 <Routes>

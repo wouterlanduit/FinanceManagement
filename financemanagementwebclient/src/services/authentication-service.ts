@@ -68,3 +68,28 @@ export class AuthenticationHelper {
         }
     }
 }
+
+export class DummyAuthenticationHelper extends AuthenticationHelper {
+    status: loggedInStatus = {
+        loggedIn: true,
+        privileges: ["DetailedRead"]
+    }
+
+    public async login() {
+        this.status.loggedIn = true;
+    }
+
+    public async logout() {
+        this.status.loggedIn = false;
+    }
+
+    public async checkLoginStatus(): Promise<loggedInStatus> {
+        return this.status;
+    }
+}
+
+export class AuthenticationService {
+    public static async checkLoginStatus(helper :AuthenticationHelper): Promise<loggedInStatus> {
+        return helper.checkLoginStatus();
+    }
+}

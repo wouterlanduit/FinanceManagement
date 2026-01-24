@@ -3,5 +3,6 @@ export interface loggedInStatusResponse {
 }
 
 export interface loggedInStatus {
-    loggedIn: boolean
+    loggedIn: boolean,
+    privileges?: string[]
 }
