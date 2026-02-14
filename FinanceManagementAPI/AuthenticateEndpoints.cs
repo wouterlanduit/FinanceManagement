@@ -45,7 +45,7 @@ namespace FinanceManagementAPI
             })
                 .AllowAnonymous();
 
-            authenticateGroup.MapPost("/login", async (
+            authenticateGroup.MapGet("/login", async (
                 [FromQuery] string? name,
                 [FromQuery] string? apiKey,
                 HttpContext ctx) =>
@@ -74,7 +74,7 @@ namespace FinanceManagementAPI
             })
                 .AllowAnonymous();
 
-            authenticateGroup.MapPost("/logout", async (
+            authenticateGroup.MapGet("/logout", async (
                 HttpContext ctx) =>
             {
                 await ctx.SignOutAsync();

@@ -2,33 +2,24 @@ using FinanceManagementAPI;
 using FinanceManagementAPI.Constants;
 using FinanceManagementAPI.Models;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Cors.Infrastructure;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Microsoft.VisualBasic;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // TODO list
 // - generate an asymmetric key for bearer
-// - move config to config file
 // - setup proper token validation parameters
 // - setup proper policy
 // - look into default policy
 // - create proper token with proper claims
 
 
-
-// TODO create config file
-var connectionString = builder.Configuration.GetConnectionString("FinancesDb") ?? "Data source=Finances.db";
-string DefaultAuthenticationSchema = CookieAuthenticationDefaults.AuthenticationScheme;//JwtBearerDefaults.AuthenticationScheme;
-string SignKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+var connectionString = builder.Configuration.GetConnectionString("FinancesDb");
+string SignKey = builder.Configuration.GetValue<string>("SignKey") ?? "";
 string[] allowedOrigins = { "http://localhost:51829" };
 
 builder.Services.AddEndpointsApiExplorer();
@@ -74,7 +65,13 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-builder.Services.AddAuthentication(Authentication.DefaultScheme)
+builder.Services.AddAuthentication(options => 
+    {
+        options.DefaultScheme = Authentication.DefaultScheme;
+        options.DefaultSignInScheme = Authentication.CookieScheme;
+        options.DefaultSignOutScheme = Authentication.CookieScheme;
+        options.RequireAuthenticatedSignIn = false;
+    })
     .AddJwtBearer(Authentication.BearerScheme, options =>
     {
         options.MapInboundClaims = false;
@@ -87,15 +84,14 @@ builder.Services.AddAuthentication(Authentication.DefaultScheme)
     })
     .AddCookie(Authentication.CookieScheme, options =>
     {
-        options.LoginPath = "/authentication/login";
-        options.LogoutPath = "/authentication/logout";
+        options.LoginPath = "/authenticate/login";
+        options.LogoutPath = "/authenticate/logout";
         options.Cookie.Name = "_general_";
     })
     .AddScheme<AuthenticationSchemeOptions, FinanceAuthenticationHandler>("FinanceScheme", options =>
     {
     });
 
-// TODO how to set default policy?
 builder.Services.AddAuthorization(builder =>
 {
     builder.AddPolicy(Authorization.PolicyRead, policy =>
@@ -126,6 +122,9 @@ builder.Services.AddAuthorization(builder =>
             .AddAuthenticationSchemes(Authentication.SupportedSchemes)
             .RequireClaim("name", "test")
             .RequireRole(Authorization.RoleAdmin));
+    // TODO do we want a fallback policy? How to show 404 if not authenticated?
+    builder.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser().Build();
 });
 
 builder.Services.AddCors(options =>

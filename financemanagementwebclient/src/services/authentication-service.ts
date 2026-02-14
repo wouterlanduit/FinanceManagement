@@ -33,7 +33,7 @@ export class AuthenticationHelper {
     public async login() {
         const resp: Response = await fetch(this.backendUrl + "/authenticate/login?name=API&apiKey=test", {
             ...this.defaultFetchOptions,
-            method: "POST"
+            method: "GET"
         });
 
         if (!resp.ok) {
@@ -43,7 +43,7 @@ export class AuthenticationHelper {
 
     public async logout() {
         const resp: Response = await fetch(this.backendUrl + "/authenticate/logout", {
-            method: "POST"
+            method: "GET"
         });
 
         if (!resp.ok) {

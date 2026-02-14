@@ -19,8 +19,8 @@ interface IAppProps {
 function App() {
     const [props, setProps] = useState<IAppProps>({
         loggedInUser: undefined,
-        datasource: new DummyDataSource(), //new AIPDataSource()//
-        authenticationHelper: new DummyAuthenticationHelper()
+        datasource: new AIPDataSource(),//new DummyDataSource(), //
+        authenticationHelper: new AuthenticationHelper()
     });
 
     const evaluateLoggedIn = () => {
