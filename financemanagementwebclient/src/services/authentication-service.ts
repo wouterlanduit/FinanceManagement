@@ -1,4 +1,4 @@
-import type { loggedInStatus, loggedInStatusResponse } from "../models/login";
+import type { bearerTokenResponse, loggedInStatus, loggedInStatusResponse } from "../models/login";
 
 export class AuthenticationHelper {
     backendUrl: string = "http://localhost:5265";
@@ -17,10 +17,8 @@ export class AuthenticationHelper {
             if (!resp.ok) {
                 throw new Error("Failed to login.");
             }
-            // TODO womee: return json with token en expiry
-            const jsonResult = await resp.text();
-            // TODO do we need to get a specific property?
-            bearerToken = jsonResult;
+            const jsonResult: bearerTokenResponse = await resp.json();
+            bearerToken = jsonResult.access_token;
         }
         catch (error) {
             console.error(error);

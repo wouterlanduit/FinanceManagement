@@ -1,4 +1,5 @@
-﻿using FinanceManagementAPI.Models;
+﻿using FinanceManagementAPI.APIContracts;
+using FinanceManagementAPI.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -35,13 +36,19 @@ namespace FinanceManagementAPI
                     ClaimTypes.Role);                           // role type
                 // TODO add key
 
-                return handler.CreateToken(new SecurityTokenDescriptor()
+                string token = handler.CreateToken(new SecurityTokenDescriptor()
                 {
                     Subject = identity,
                     SigningCredentials = new SigningCredentials(
                         new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(signKey)),
                         SecurityAlgorithms.HmacSha256)
                 });
+
+                return new BearerTokenResponse
+                {
+                    access_token = token,
+                    token_type = "Bearer"
+                };
             })
                 .AllowAnonymous();
 
