@@ -31,10 +31,18 @@ namespace FinanceManagementAPI
                 List<MonthSummary> summaries = await db.MonthSummaries.Where(s => s.Year == request.year && s.Month == request.month).ToListAsync();
                 MonthSummary summary = summaries.Count > 0 ? summaries.First() : new MonthSummary() { Year = request.year, Month = request.month};
 
+                List<Receipt> receipts = await db.Receipts.Where(r => r.Date >= new DateTime(request.year, request.month, 1) && r.Date <= new DateTime(request.year, request.month, DateTime.DaysInMonth(request.year, request.month))).ToListAsync();
+                List<Bill> bills = await db.Bills.Where(b => b.DatePayed >= new DateTime(request.year, request.month, 1) && b.DatePayed <= new DateTime(request.year, request.month, DateTime.DaysInMonth(request.year, request.month))).ToListAsync();
+
+                decimal rent = 600;
+                decimal receiptTotal = receipts.Sum(r => r.Amount ?? 0);
+                decimal receiptNonFood = 0; // TODO implement
+                decimal billTotal = bills.Sum(b => b.Amount ?? 0);
+
                 summary.Rent = 600;
-
-                // TODO calculate summary
-
+                summary.Food = receiptTotal - receiptNonFood;
+                summary.NonFood = receiptNonFood;
+                summary.Total = rent + receiptTotal + billTotal;
 
                 if (summary.Id == 0)
                 {

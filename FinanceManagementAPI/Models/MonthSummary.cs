@@ -8,8 +8,10 @@
         public int Year { get; set; }
         public int Month { get; set; }
         public decimal Rent { get; set; }
+        public decimal Utilities { get; set; }
         public decimal Food { get; set; }
         public decimal NonFood { get; set; }
+        public decimal Total { get; set; }
     }
 
 }
