@@ -17,7 +17,8 @@ namespace FinanceManagementAPI
             var authenticateGroup = app.MapGroup("/authenticate/");
             authenticateGroup.MapPost("/bearer", (
                 [FromQuery] string? name,
-                [FromQuery] string? apiKey) =>
+                [FromQuery] string? apiKey,
+                HttpContext ctx) =>
             {
                 JsonWebTokenHandler handler = new JsonWebTokenHandler();
                 var claims = new List<Claim>();
@@ -39,6 +40,8 @@ namespace FinanceManagementAPI
                 string token = handler.CreateToken(new SecurityTokenDescriptor()
                 {
                     Subject = identity,
+                    Audience = ctx.Request.Scheme + "://" + ctx.Request.Host,
+                    Issuer = "localhost",
                     SigningCredentials = new SigningCredentials(
                         new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(signKey)),
                         SecurityAlgorithms.HmacSha256)

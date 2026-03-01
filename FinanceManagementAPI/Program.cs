@@ -78,9 +78,10 @@ builder.Services.AddAuthentication(options =>
         options.TokenValidationParameters = new TokenValidationParameters()
         {
             IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(SignKey)),
-            ValidateAudience = false,   // TODO true
-            ValidateIssuer = false,     // TODO true
+            ValidateAudience = true,
+            ValidateIssuer = true,
         };
+        options.MapInboundClaims = false;
     })
     .AddCookie(Authentication.CookieScheme, options =>
     {

@@ -2,7 +2,7 @@
 {
     public class BearerTokenResponse
     {
-        public string access_token { get; set; }
-        public string token_type { get; set; }
+        public required string access_token { get; set; }
+        public required string token_type { get; set; }
     }
 }
