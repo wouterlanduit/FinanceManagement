@@ -11,7 +11,7 @@ import { AuthenticationHelper, DummyAuthenticationHelper } from './services/auth
 import type { loggedInStatus } from './models/login';
 
 interface IAppProps {
-    loggedInUser?: boolean,
+    loggedInUser?: boolean, // TODO create cookie for user info (like locale) instead of having to pass it
     datasource: DataSource,
     authenticationHelper: AuthenticationHelper
 }

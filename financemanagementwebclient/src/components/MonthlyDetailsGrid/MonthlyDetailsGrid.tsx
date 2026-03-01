@@ -4,9 +4,12 @@ import { type DataSource, DataSourceService }  from '../../services/data-source-
 import { createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, Toolbar, ToolbarButton, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
 import AddRecordDialog, { type AddRecordDialogField } from '../AddRecordDialog/AddRecordDialog';
 import type { SourceDTO } from '../../models/source-dto';
+import type { IReceiptFilter } from '../../models/types';
 
 export interface IMonthlyDetailsGridProps {
     name: string,
+    month?: number,
+    year?: number,
     _ISDEBUG_: boolean,
     source: DataSource
 }
@@ -22,7 +25,7 @@ const columns: TableColumnDefinition<ReceiptDTO>[] = [
             return "Date";
         },
         renderCell: (item) => {
-            return item.date.toLocaleDateString('nl-be');   // TODO config
+            return item.date.toLocaleDateString('nl-be');   // TODO config/cookie
         }
     }),
     createTableColumn<ReceiptDTO>({
@@ -58,7 +61,7 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
 
     const fetchData = async () => {
         try {
-            setReceipts(await FetchReceipts(props.source));
+            setReceipts(await FetchReceipts(props.source, { month: props.month, year: props.year }));
             setSources(await FetchSources(props.source));
         }
         finally {
@@ -209,8 +212,8 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
     );
 }
 
-async function FetchReceipts(source: DataSource): Promise<ReceiptDTO[]> {
-    return await DataSourceService.loadReceipts(source);
+async function FetchReceipts(source: DataSource, filter: IReceiptFilter): Promise<ReceiptDTO[]> {
+    return await DataSourceService.loadReceipts(source, filter);
 }
 
 async function FetchSources(source: DataSource): Promise<SourceDTO[]> {

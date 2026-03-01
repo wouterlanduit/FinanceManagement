@@ -1,9 +1,10 @@
 import type { ReceiptDTO, ReceiptResponseJSON } from '../models/receipt-dto';
 import type { SourceDTO, SourceResponseJSON } from '../models/source-dto';
+import type { IReceiptFilter } from '../models/types';
 import { AuthenticationHelper } from './authentication-service';
 
 export interface DataSource {
-    loadReceipts(): Promise<ReceiptDTO[]>;
+    loadReceipts(filter?: IReceiptFilter): Promise<ReceiptDTO[]>;
     loadSources(): Promise<SourceDTO[]>;
 
     addReceipt(receipt: ReceiptDTO): Promise<boolean>;
@@ -49,8 +50,16 @@ export class DummyDataSource implements DataSource {
         },
     ];
 
-    public async loadReceipts(): Promise<ReceiptDTO[]> {
-        return this.receipts;
+    public async loadReceipts(filter?: IReceiptFilter): Promise<ReceiptDTO[]> {
+        let ret: ReceiptDTO[] = [];
+
+        if (filter == undefined) {
+            ret = this.receipts;
+        } else {
+            // TODO add filtering
+        }
+
+        return ret;
     }
 
     public async addReceipt(receipt: ReceiptDTO): Promise<boolean> {
@@ -83,11 +92,12 @@ export class AIPDataSource implements DataSource {
         return this.bearerToken;
     }
 
-    public async loadReceipts(): Promise<ReceiptDTO[]> {
+    public async loadReceipts(filter?: IReceiptFilter): Promise<ReceiptDTO[]> {
         try {
             const bearerToken: string = await this.getBearerToken();
             const request: Request = new Request(this.backendUrl + "/receipts");
             request.headers.set("Authorization", "Bearer " + bearerToken);
+            // TODO use filter
             const resp: Response = await fetch(request, this.defaultFetchOptions);
             if (!resp.ok) {
                 throw new Error("Failed to fetch receipts.");
@@ -214,8 +224,8 @@ export class AIPDataSource implements DataSource {
 }
 
 export class DataSourceService {
-    public static async loadReceipts(source: DataSource): Promise<ReceiptDTO[]> {
-        return source.loadReceipts();
+    public static async loadReceipts(source: DataSource, filter?: IReceiptFilter): Promise<ReceiptDTO[]> {
+        return source.loadReceipts(filter);
     }
 
     public static async addReceipt(receipt: ReceiptDTO, source: DataSource) {
