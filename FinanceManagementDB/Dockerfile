@@ -4,7 +4,7 @@
 FROM mysql:latest
 
 # Set environment variables
-ENV MYSQL_DATABASE FinanceManagementDB
+ENV MYSQL_DATABASE=FinanceManagementDB
 
 # Copy custom scripts or configuration files from your host to the container
 COPY ./scripts/ /docker-entrypoint-initdb.d/
