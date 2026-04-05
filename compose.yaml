@@ -1,0 +1,15 @@
+services:
+    backend:
+        build:
+            context: .
+            target: final
+            dockerfile: ./FinanceManagementAPI/Dockerfile
+        ports:
+            - "5800:8080"
+        volumes:
+            - db-data:/app/database
+        environment:
+            - ASPNETCORE_ENVIRONMENT=Development
+volumes:
+    db-data:
+  
