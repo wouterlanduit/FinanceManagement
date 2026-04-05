@@ -4,6 +4,7 @@ using FinanceManagementAPI.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Protocols.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
@@ -16,9 +17,12 @@ var builder = WebApplication.CreateBuilder(args);
 // - setup proper policy
 // - look into default policy
 // - create proper token with proper claims
-
+// - include migrations in code: https://learn.microsoft.com/en-us/archive/msdn-magazine/2019/april/data-points-ef-core-in-a-docker-containerized-app#migrating-the-database
+//      -> create separate DB syncer?
+//      -> alternative: find how to apply migrations
 
 var connectionString = builder.Configuration.GetConnectionString("FinancesDb");
+var databaseType = builder.Configuration.GetValue<string>("DatabaseType") ?? "Sqlite";
 string SignKey = builder.Configuration.GetValue<string>("SignKey") ?? "";
 string[] allowedOrigins = { "http://localhost:51829" };
 
@@ -58,7 +62,21 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddSqlite<FinanceManagementDb>(connectionString);
+if (databaseType == "Sqlite")
+{
+    builder.Services.AddSqlite<FinanceManagementDb>(connectionString);
+}
+else if (databaseType == "MySql")
+{
+    builder.Services.AddDbContext<FinanceManagementDb>((_, options) =>
+    {
+
+    });
+}
+else
+{
+    throw new InvalidConfigurationException("Missing database type configuration.");
+}
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {

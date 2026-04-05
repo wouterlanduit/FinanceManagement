@@ -77,7 +77,7 @@ export class DummyDataSource implements DataSource {
 
 export class AIPDataSource implements DataSource {
     bearerToken: string = "";
-    backendUrl: string = "http://localhost:5265";
+    backendUrl: string = "http://localhost:5265";   // TODO environment variable?
     sources: SourceDTO[] = [];
     defaultFetchOptions: RequestInit = {
         credentials: "include"
