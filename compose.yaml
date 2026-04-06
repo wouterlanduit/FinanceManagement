@@ -7,9 +7,18 @@ services:
         ports:
             - "5800:8080"
         volumes:
-            - db-data:/app/database
+            - ./db-data:/app/database
         environment:
             - ASPNETCORE_ENVIRONMENT=Development
-volumes:
-    db-data:
+#    frontend:
+#        build:
+#            context: ./financemanagementwebclient
+#            target: runner
+#            dockerfile: ./Dockerfile
+#        ports:
+#            - "5900:8080"
+#        environment:
+#           - NODE_ENV=production
+#volumes:
+#    db-data:
   
