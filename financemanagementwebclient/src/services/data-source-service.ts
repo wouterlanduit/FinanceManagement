@@ -77,7 +77,7 @@ export class DummyDataSource implements DataSource {
 
 export class AIPDataSource implements DataSource {
     bearerToken: string = "";
-    backendUrl: string = "http://localhost:5265";   // TODO environment variable?
+    backendUrl: string = "http://localhost:5800";   // TODO environment variable?
     sources: SourceDTO[] = [];
     defaultFetchOptions: RequestInit = {
         credentials: "include"
@@ -92,7 +92,8 @@ export class AIPDataSource implements DataSource {
         return this.bearerToken;
     }
 
-    public async loadReceipts(filter?: IReceiptFilter): Promise<ReceiptDTO[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async loadReceipts(_filter?: IReceiptFilter): Promise<ReceiptDTO[]> {
         try {
             const bearerToken: string = await this.getBearerToken();
             const request: Request = new Request(this.backendUrl + "/receipts");

@@ -1,7 +1,7 @@
 import type { bearerTokenResponse, loggedInStatus, loggedInStatusResponse } from "../models/login";
 
 export class AuthenticationHelper {
-    backendUrl: string = "http://localhost:5265";   // TODO environment variable?
+    backendUrl: string = "http://localhost:5800";   // TODO environment variable?
     defaultFetchOptions: RequestInit = {
         credentials: "include"
     }

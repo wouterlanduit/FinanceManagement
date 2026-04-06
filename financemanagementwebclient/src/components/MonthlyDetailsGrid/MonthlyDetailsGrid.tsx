@@ -200,7 +200,7 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
                         {rows.map((row) => (
                             <TableRow key={row.item.id}>
                                 {columns.map((column) => (
-                                    <TableCell>
+                                    <TableCell key={`${row.item.id}_${column.columnId}`}>
                                         {column.renderCell(row.item)}
                                     </TableCell>))}
                             </TableRow>

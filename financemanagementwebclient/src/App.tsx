@@ -6,8 +6,8 @@ import Expenses from './pages/Expenses';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import Sources from './pages/Sources';
-import { AIPDataSource, DummyDataSource, type DataSource } from "./services/data-source-service";
-import { AuthenticationHelper, DummyAuthenticationHelper } from './services/authentication-service';
+import { AIPDataSource, type DataSource } from "./services/data-source-service";
+import { AuthenticationHelper } from './services/authentication-service';
 import type { loggedInStatus } from './models/login';
 
 interface IAppProps {
@@ -20,7 +20,7 @@ function App() {
     const [props, setProps] = useState<IAppProps>({
         loggedInUser: undefined,
         datasource: new AIPDataSource(),//new DummyDataSource(), //
-        authenticationHelper: new AuthenticationHelper()
+        authenticationHelper: new AuthenticationHelper() // new DummyAuthenticationHelper() //
     });
 
     const evaluateLoggedIn = () => {

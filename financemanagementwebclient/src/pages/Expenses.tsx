@@ -36,16 +36,16 @@ function Expenses(props: IExpensesProps) {
         <form onSubmit={handleSubmitFilter}>
             <Select
                 id={'month'}
-                onChange={(ev, selection: SelectOnChangeData) => {
+                onChange={(_ev, selection: SelectOnChangeData) => {
                     setMonth(months.findIndex((value: string) => value === selection.value) + 1)
                 } }
             >
-                {months.map((month: string) => (<option>{month}</option>))}
+                {months.map((month: string) => (<option key={month}>{month}</option>))}
             </Select>
             <Input
                 id={'year'}
                 type={'number'}
-                onChange={(ev, input: InputOnChangeData) => {
+                onChange={(_ev, input: InputOnChangeData) => {
                     setYear(parseInt(input.value))
                 }}
             />
