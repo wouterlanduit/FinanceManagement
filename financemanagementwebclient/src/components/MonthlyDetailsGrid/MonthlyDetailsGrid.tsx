@@ -7,7 +7,6 @@ import type { SourceDTO } from '../../models/source-dto';
 import type { IReceiptFilter } from '../../models/types';
 
 export interface IMonthlyDetailsGridProps {
-    name: string,
     month?: number,
     year?: number,
     _ISDEBUG_: boolean,
@@ -151,8 +150,6 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
 
     return (
         <>
-            <h1>{props.name + " : " + currentYear + "/" + currentMonth}</h1>
-
             <Toolbar>
                 <AddRecordDialog<ReceiptDTO>
                     _ISDEBUG_={props._ISDEBUG_}

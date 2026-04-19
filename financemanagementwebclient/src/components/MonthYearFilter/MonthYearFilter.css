@@ -1,0 +1,11 @@
+.month-year-filter {
+    padding: 5px;
+    border: solid;
+    border-radius: 10px;
+    max-width: 500px;
+}
+
+.month-year-filter span{
+    display: initial;
+    margin-right: 20px;
+}

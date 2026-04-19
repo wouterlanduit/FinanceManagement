@@ -33,24 +33,29 @@ function MonthYearFilter(props: IMonthYearFilterProps) {
         "December"
     ];
 
-    return <form onSubmit={handleSubmitFilter}>
-        <Select
-            id={'month'}
-            onChange={(_ev, selection: SelectOnChangeData) => {
-                setMonth(months.findIndex((value: string) => value === selection.value) + 1)
-            }}
-        >
-            {months.map((month: string) => (<option key={month}>{month}</option>))}
-        </Select>
-        <Input
-            id={'year'}
-            type={'number'}
-            onChange={(_ev, input: InputOnChangeData) => {
-                setYear(parseInt(input.value))
-            }}
-        />
-        <Button type="submit" appearance="primary">Filter</Button>
-    </form>
+    // TODO use start html elements? or react?
+    return <div className="month-year-filter">
+        <form onSubmit={handleSubmitFilter}>
+            <Select
+                id={'month'}
+                onChange={(_ev, selection: SelectOnChangeData) => {
+                    setMonth(months.findIndex((value: string) => value === selection.value) + 1)
+                }}
+            >
+                {months.map((month: string) => (<option key={month}>{month}</option>))}
+            </Select>
+            <Input
+                id={'year'}
+                type={'number'}
+                onChange={(_ev, input: InputOnChangeData) => {
+                    setYear(parseInt(input.value))
+                }}
+            />
+            <Button type="submit" appearance="primary">Filter</Button>
+        </form>
+    </div>
+    
+    
 }
 
 export default MonthYearFilter;

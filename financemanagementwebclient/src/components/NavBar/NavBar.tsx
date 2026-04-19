@@ -15,14 +15,14 @@ function NavBar(props: INavBarProps) {
 
     return <nav>
         <ul>
-            <li onClick={() => collapseDropdowns()}><NavLink to="/" className={"nav-element"}>Home</NavLink></li>
-            {props.loggedIn && <li onClick={() => collapseDropdowns()}><NavLink to="/expenses" className={"nav-element"}>Expenses</NavLink></li>}
+            <li onClick={() => collapseDropdowns()}><NavLink to="/" className="nav-element">Home</NavLink></li>
+            {props.loggedIn && <li onClick={() => collapseDropdowns()}><NavLink to="/expenses" className="nav-element">Expenses</NavLink></li>}
             {props.loggedIn && < li onClick={() => setShowSetupDropdown(!showSetupDropdown)}>
-                <div className={"nav-element"}>Setup {showSetupDropdown ? "\u25B2" : "\u25BC"}</div>
+                <div className="nav-element">Setup {showSetupDropdown ? "\u25B2" : "\u25BC"}</div>
                 <ul
                     className={showSetupDropdown ? "nestednav-show" : "nestednav-hide"}
                     onClick={() => collapseDropdowns()}>
-                    <li><NavLink to="/sources" className={"nav-element"}>Sources</NavLink></li>
+                    <li><NavLink to="/sources" className="nav-element">Sources</NavLink></li>
                 </ul>
 
             </li>}
