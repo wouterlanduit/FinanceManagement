@@ -58,11 +58,15 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
     const [receipts, setReceipts] = useState<ReceiptDTO[] | null>(null);
     const [sources, setSources] = useState<SourceDTO[] | null>(null);
     const [fetchingData, setFetchingData] = useState<boolean>(false);
+    const [currentMonth, setCurrentMonth] = useState<number | undefined>(0);
+    const [currentYear, setCurrentYear] = useState<number | undefined>(0);
 
     const fetchData = async () => {
         try {
             setReceipts(await FetchReceipts(props.source, { month: props.month, year: props.year }));
             setSources(await FetchSources(props.source));
+            setCurrentMonth(props.month);
+            setCurrentYear(props.year);
         }
         finally {
             setFetchingData(false);
@@ -76,7 +80,7 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
         }
     }
 
-    if (receipts === null && fetchingData === false) {
+    if ((receipts === null || currentMonth != props.month || currentYear != props.year) && fetchingData === false) {
         triggerDataFetch();
     }
 
@@ -145,10 +149,9 @@ function MonthlyDetailsGrid(props: IMonthlyDetailsGridProps) {
         }
     ]
 
-    //TODO check if we can use row.rowId as row key
     return (
         <>
-            <h1>{props.name}</h1>
+            <h1>{props.name + " : " + currentYear + "/" + currentMonth}</h1>
 
             <Toolbar>
                 <AddRecordDialog<ReceiptDTO>

@@ -13,7 +13,27 @@ namespace FinanceManagementAPI
         public static void Map(WebApplication app)
         {
             var receiptGroup = app.MapGroup("/receipts/");
-            receiptGroup.MapGet("/", async (FinanceManagementDb db) => await db.Receipts.ToListAsync())
+            receiptGroup.MapGet("/", async ([FromQuery] int? year, [FromQuery] int? month, FinanceManagementDb db) => {
+                Task<List<Receipt>> ret = db.Receipts.ToListAsync();
+
+                if (year != null)
+                {
+                    DateTime fromDate = new DateTime(year.Value, month ?? 1, 1);
+                    DateTime toDate = new DateTime(year.Value, month ?? 12, DateTime.DaysInMonth(year.Value, month ?? 12)).AddDays(1).AddMilliseconds(-1);
+                    
+                    ret = db.Receipts
+                    .Where(r => r.Date != null && r.Date >= fromDate && r.Date <= toDate)
+                    .ToListAsync();
+                }
+                else if (month != null)
+                {
+                    ret = db.Receipts
+                    .Where(r => r.Date != null && ((DateTime)r.Date).Month == month)
+                    .ToListAsync();
+                }
+
+                return await ret;
+            })
                 .RequireAuthorization(Constants.Authorization.PolicyRead);
             receiptGroup.MapGet("/{id}", async ([FromRoute] int id, [FromServices] FinanceManagementDb db) => await db.Receipts.FindAsync(id))
                 .RequireAuthorization(Constants.Authorization.PolicyDetailedRead);

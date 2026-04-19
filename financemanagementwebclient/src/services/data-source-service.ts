@@ -92,13 +92,24 @@ export class AIPDataSource implements DataSource {
         return this.bearerToken;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async loadReceipts(_filter?: IReceiptFilter): Promise<ReceiptDTO[]> {
         try {
             const bearerToken: string = await this.getBearerToken();
-            const request: Request = new Request(this.backendUrl + "/receipts");
+            let url: string = this.backendUrl + "/receipts";
+            if (_filter?.month != null || _filter?.year != null) {
+                url += "?";
+                let queryStr: string = "";
+                if (_filter?.year != null) {
+                    queryStr += `year=${_filter?.year}`;
+                }
+                if (_filter?.month != null) {
+                    queryStr += `${queryStr.length > 0 ? "&" : ""}month=${_filter?.month}`;
+                }
+                url += queryStr;
+            }
+            const request: Request = new Request(url);
             request.headers.set("Authorization", "Bearer " + bearerToken);
-            // TODO use filter
+            
             const resp: Response = await fetch(request, this.defaultFetchOptions);
             if (!resp.ok) {
                 throw new Error("Failed to fetch receipts.");
