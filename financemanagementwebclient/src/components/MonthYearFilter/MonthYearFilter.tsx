@@ -19,6 +19,7 @@ function MonthYearFilter(props: IMonthYearFilterProps) {
     };
 
     const months: string[] = [
+        "All",
         "January",
         "February",
         "March",
@@ -39,7 +40,8 @@ function MonthYearFilter(props: IMonthYearFilterProps) {
             <Select
                 id={'month'}
                 onChange={(_ev, selection: SelectOnChangeData) => {
-                    setMonth(months.findIndex((value: string) => value === selection.value) + 1)
+                    const monthIdx: number = months.findIndex((value: string) => value === selection.value);
+                    setMonth(monthIdx != 0 ? monthIdx : undefined);
                 }}
             >
                 {months.map((month: string) => (<option key={month}>{month}</option>))}
@@ -48,7 +50,8 @@ function MonthYearFilter(props: IMonthYearFilterProps) {
                 id={'year'}
                 type={'number'}
                 onChange={(_ev, input: InputOnChangeData) => {
-                    setYear(parseInt(input.value))
+                    const parsedYear: number = parseInt(input.value);
+                    setYear(parsedYear != 0 && !isNaN(parsedYear) ? parsedYear : undefined)
                 }}
             />
             <Button type="submit" appearance="primary">Filter</Button>

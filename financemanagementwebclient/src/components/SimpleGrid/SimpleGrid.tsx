@@ -75,7 +75,7 @@ function SimpleGrid<T>(props: ISimpleGridProps<T>) {
         [
             useTableSort({
                 defaultSortState: {
-                    sortColumn: "name",
+                    sortColumn: props.columns[0]?.name ?? "",
                     sortDirection: "ascending"
                 }
             })
@@ -145,7 +145,7 @@ function SimpleGrid<T>(props: ISimpleGridProps<T>) {
                         {rows.map((row) => (
                             <TableRow key={props.getRowId(row.item)}>
                                 {columns.map((column) => (
-                                    <TableCell>
+                                    <TableCell key={`${props.getRowId(row.item)}_${column.columnId}`}>
                                         {column.renderCell(row.item)}
                                     </TableCell>))}
                             </TableRow>
