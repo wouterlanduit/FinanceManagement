@@ -17,6 +17,7 @@ function NavBar(props: INavBarProps) {
         <ul>
             <li onClick={() => collapseDropdowns()}><NavLink to="/" className="nav-element">Home</NavLink></li>
             {props.loggedIn && <li onClick={() => collapseDropdowns()}><NavLink to="/expenses" className="nav-element">Expenses</NavLink></li>}
+            {props.loggedIn && <li onClick={() => collapseDropdowns()}><NavLink to="/summary" className="nav-element">Summary</NavLink></li>}
             {props.loggedIn && < li onClick={() => setShowSetupDropdown(!showSetupDropdown)}>
                 <div className="nav-element">Setup {showSetupDropdown ? "\u25B2" : "\u25BC"}</div>
                 <ul

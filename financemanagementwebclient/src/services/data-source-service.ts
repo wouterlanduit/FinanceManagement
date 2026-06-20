@@ -1,3 +1,4 @@
+import type { MonthSummaryDTO, MonthSummaryResponseJSON } from '../models/month-summary-dto';
 import type { ReceiptDTO, ReceiptResponseJSON } from '../models/receipt-dto';
 import type { SourceDTO, SourceResponseJSON } from '../models/source-dto';
 import type { IReceiptFilter } from '../models/types';
@@ -6,6 +7,7 @@ import { AuthenticationHelper } from './authentication-service';
 export interface DataSource {
     loadReceipts(filter?: IReceiptFilter): Promise<ReceiptDTO[]>;
     loadSources(): Promise<SourceDTO[]>;
+    loadMonthSummaries(): Promise<MonthSummaryDTO[]>;
 
     addReceipt(receipt: ReceiptDTO): Promise<boolean>;
     addSource(source: SourceDTO): Promise<boolean>;
@@ -72,6 +74,10 @@ export class DummyDataSource implements DataSource {
 
     public async addSource(source: SourceDTO): Promise<boolean> {
         return this.sources.push(source) > 0;
+    }
+
+    public async loadMonthSummaries(): Promise<MonthSummaryDTO[]> {
+        return [];
     }
 }
 
@@ -213,6 +219,38 @@ export class AIPDataSource implements DataSource {
         return ret;
     }
 
+    public async loadMonthSummaries(): Promise<MonthSummaryDTO[]> {
+        try {
+            const request: Request = new Request(this.backendUrl + "/summaries");
+            const bearerToken: string = await this.getBearerToken();
+            if (bearerToken) {
+                request.headers.set("Authorization", "Bearer " + bearerToken);
+            }
+
+            const resp: Response = await fetch(request, this.defaultFetchOptions);
+            if (!resp.ok) {
+                throw new Error("Failed to fetch summaries.");
+            }
+
+            const jsonResult: MonthSummaryResponseJSON[] = await resp.json();
+
+            return jsonResult.map(value => {
+                return {
+                    id: value.id ?? 0,
+                    year: value.year ?? 0,
+                    month: value.month ?? 0,
+                    rent: value.rent ?? 0,
+                    total: value.total ?? 0,
+                }
+            });
+        }
+        catch (e) {
+            console.log(e);
+        }
+
+        return [];
+    }
+
     private async executeCreate(_body: string, _endpoint: string): Promise<boolean> {
         let ret: boolean = false;
         const bearerToken: string = await this.getBearerToken();
@@ -246,5 +284,9 @@ export class DataSourceService {
 
     public static async loadSources(source: DataSource): Promise<SourceDTO[]> {
         return source.loadSources();
+    }
+
+    public static async loadMonthSummaries(source: DataSource): Promise<MonthSummaryDTO[]> {
+        return source.loadMonthSummaries();
     }
 }
