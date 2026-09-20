@@ -2,11 +2,13 @@ import { useState } from 'react';
 import type { MonthSummaryDTO } from '../../models/month-summary-dto';
 import { type DataSource, DataSourceService }  from '../../services/data-source-service'
 import { createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, Toolbar, ToolbarButton, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
+import type { IMonthSummaryFilter } from '../../models/types';
 
 export interface IMonthlySummaryGridProps {
-    source: DataSource
+    source: DataSource,
+    year?: number,
+    month?: number
 }
-
 
 const columns: TableColumnDefinition<MonthSummaryDTO>[] = [
     createTableColumn<MonthSummaryDTO>({
@@ -62,10 +64,14 @@ const columns: TableColumnDefinition<MonthSummaryDTO>[] = [
 function MonthlySummaryGrid(props: IMonthlySummaryGridProps) {
     const [monthSummaries, setMonthSummaries] = useState<MonthSummaryDTO[] | null>(null);
     const [fetchingData, setFetchingData] = useState<boolean>(false);
+    const [currentMonth, setCurrentMonth] = useState<number | undefined>(0);
+    const [currentYear, setCurrentYear] = useState<number | undefined>(0);
 
     const fetchData = async () => {
         try {
-            setMonthSummaries(await FetchMonthSummaries(props.source));
+            setMonthSummaries(await FetchMonthSummaries(props.source, { month: props.month, year: props.year }));
+            setCurrentMonth(props.month);
+            setCurrentYear(props.year);
         }
         finally {
             setFetchingData(false);
@@ -79,7 +85,7 @@ function MonthlySummaryGrid(props: IMonthlySummaryGridProps) {
         }
     }
 
-    if ((monthSummaries === null) && fetchingData === false) {
+    if ((monthSummaries === null || currentMonth != props.month || currentYear != props.year) && fetchingData === false) {
         triggerDataFetch();
     }
 
@@ -119,7 +125,10 @@ function MonthlySummaryGrid(props: IMonthlySummaryGridProps) {
             <Toolbar>
                 <ToolbarButton aria-label="Refresh" onClick={triggerDataFetch}>Refresh</ToolbarButton>
             </Toolbar>
-            
+
+            // TODO: hide year column if filtered
+            // TODO: add placeholder rows
+            // TODO: add button on row to recalculate
 
             {monthSummaries != null &&
                 <Table
@@ -157,8 +166,8 @@ function MonthlySummaryGrid(props: IMonthlySummaryGridProps) {
     );
 }
 
-async function FetchMonthSummaries(source: DataSource): Promise<MonthSummaryDTO[]> {
-    return await DataSourceService.loadMonthSummaries(source);
+async function FetchMonthSummaries(source: DataSource, filter: IMonthSummaryFilter): Promise<MonthSummaryDTO[]> {
+    return await DataSourceService.loadMonthSummaries(source, filter);
 }
 
 export default MonthlySummaryGrid;

@@ -10,6 +10,7 @@ import { AIPDataSource, type DataSource } from "./services/data-source-service";
 import { AuthenticationHelper } from './services/authentication-service';
 import type { loggedInStatus } from './models/login';
 import Summary from './pages/Summary';
+import Bills from './pages/Bills';
 
 interface IAppProps {
     loggedInUser?: boolean, // TODO create cookie for user info (like locale) instead of having to pass it
@@ -50,6 +51,7 @@ function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/summary" element={<Summary datasource={props.datasource} /> } />
                     <Route path="/expenses" element={<Expenses datasource={props.datasource} />} />
+                    <Route path="/bills" element={<Bills datasource={props.datasource} />} />
                     <Route path="/sources" element={<Sources datasource={props.datasource} />} />
                     <Route path="/notfound" element={<NotFound />} />
                     <Route path="*" element={ <Navigate to="/notfound" replace /> } />

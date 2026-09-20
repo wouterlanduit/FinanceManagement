@@ -1,19 +1,32 @@
+import type { BillDTO, BillResponseJSON } from '../models/bill-dto';
 import type { MonthSummaryDTO, MonthSummaryResponseJSON } from '../models/month-summary-dto';
 import type { ReceiptDTO, ReceiptResponseJSON } from '../models/receipt-dto';
 import type { SourceDTO, SourceResponseJSON } from '../models/source-dto';
-import type { IReceiptFilter } from '../models/types';
+import type { IReceiptFilter, IBillFilter, IMonthSummaryFilter } from '../models/types';
 import { AuthenticationHelper } from './authentication-service';
 
 export interface DataSource {
+    loadBills(filter?: IBillFilter): Promise<BillDTO[]>;
     loadReceipts(filter?: IReceiptFilter): Promise<ReceiptDTO[]>;
     loadSources(): Promise<SourceDTO[]>;
-    loadMonthSummaries(): Promise<MonthSummaryDTO[]>;
+    loadMonthSummaries(filter?: IMonthSummaryFilter): Promise<MonthSummaryDTO[]>;
 
+    addBill(receipt: BillDTO): Promise<boolean>;
     addReceipt(receipt: ReceiptDTO): Promise<boolean>;
     addSource(source: SourceDTO): Promise<boolean>;
 }
 
 export class DummyDataSource implements DataSource {
+    bills: BillDTO[] = [
+        {
+            id: 1,
+            date: new Date(2025, 8, 3),
+            datePayed: new Date(2025, 8, 5),
+            sourceid: 1,
+            sourcename: "Store_1",
+            amount: 20.05
+        }
+    ];
     receipts: ReceiptDTO[] = [
         {
             id: 1,
@@ -51,6 +64,19 @@ export class DummyDataSource implements DataSource {
             name: "Store_3"
         },
     ];
+    monthSummaries: MonthSummaryDTO[] = [];
+
+    public async loadBills(filter?: IBillFilter): Promise<BillDTO[]> {
+        let ret: BillDTO[] = [];
+
+        if (filter == undefined) {
+            ret = this.bills;
+        } else {
+            // TODO add filtering
+        }
+
+        return ret;
+    }
 
     public async loadReceipts(filter?: IReceiptFilter): Promise<ReceiptDTO[]> {
         let ret: ReceiptDTO[] = [];
@@ -62,6 +88,10 @@ export class DummyDataSource implements DataSource {
         }
 
         return ret;
+    }
+
+    public async addBill(bill: BillDTO): Promise<boolean> {
+        return this.bills.push(bill) > 0;
     }
 
     public async addReceipt(receipt: ReceiptDTO): Promise<boolean> {
@@ -76,8 +106,16 @@ export class DummyDataSource implements DataSource {
         return this.sources.push(source) > 0;
     }
 
-    public async loadMonthSummaries(): Promise<MonthSummaryDTO[]> {
-        return [];
+    public async loadMonthSummaries(filter?: IMonthSummaryFilter): Promise<MonthSummaryDTO[]> {
+        let ret: MonthSummaryDTO[] = [];
+
+        if (filter == undefined) {
+            ret = this.monthSummaries;
+        } else {
+            // TODO add filtering
+        }
+
+        return ret;
     }
 }
 
@@ -96,6 +134,51 @@ export class AIPDataSource implements DataSource {
         }
 
         return this.bearerToken;
+    }
+
+    public async loadBills(_filter?: IBillFilter): Promise<BillDTO[]> {
+        try {
+            const bearerToken: string = await this.getBearerToken();
+            let url: string = this.backendUrl + "/bills";
+            if (_filter?.month != null || _filter?.year != null) {
+                url += "?";
+                let queryStr: string = "";
+                if (_filter?.year != null) {
+                    queryStr += `year=${_filter?.year}`;
+                }
+                if (_filter?.month != null) {
+                    queryStr += `${queryStr.length > 0 ? "&" : ""}month=${_filter?.month}`;
+                }
+                url += queryStr;
+            }
+            const request: Request = new Request(url);
+            request.headers.set("Authorization", "Bearer " + bearerToken);
+
+            const resp: Response = await fetch(request, this.defaultFetchOptions);
+            if (!resp.ok) {
+                throw new Error("Failed to fetch receipts.");
+            }
+
+            const jsonResult: BillResponseJSON[] = await resp.json();
+
+            await this.loadSources();
+
+            return jsonResult.map(value => {
+                return {
+                    id: value.id ?? 0,
+                    amount: value.amount ?? 0,
+                    date: new Date(value.date ?? ""),
+                    datePayed: new Date(value.datePayed ?? ""),
+                    sourceid: value.sourceId ?? 0,
+                    sourcename: this.translateSourceId(value.sourceId ?? 0)
+                }
+            });
+        }
+        catch (e) {
+            console.log(e);
+        }
+
+        return [];
     }
 
     public async loadReceipts(_filter?: IReceiptFilter): Promise<ReceiptDTO[]> {
@@ -146,6 +229,30 @@ export class AIPDataSource implements DataSource {
         return this.sources.find((source: SourceDTO) => {
             return source.id === sourceId;
         })?.name ?? "";
+    }
+
+    public async addBill(_bill: BillDTO): Promise<boolean> {
+        let ret: boolean = false;
+
+        try {
+            const requestBody: string = JSON.stringify({
+                sourceid: _bill.sourceid,
+                amount: _bill.amount,
+                date: _bill.date.toISOString(),
+                datePayed: _bill.datePayed.toISOString(),
+            });
+
+            if (!this.executeCreate(requestBody, "/bills")) {
+                console.error("Failed to create bill.");
+            } else {
+                ret = true;
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
+
+        return ret;
     }
 
     public async addReceipt(_receipt: ReceiptDTO): Promise<boolean> {
@@ -219,10 +326,22 @@ export class AIPDataSource implements DataSource {
         return ret;
     }
 
-    public async loadMonthSummaries(): Promise<MonthSummaryDTO[]> {
+    public async loadMonthSummaries(_filter?: IMonthSummaryFilter): Promise<MonthSummaryDTO[]> {
         try {
-            const request: Request = new Request(this.backendUrl + "/summaries");
             const bearerToken: string = await this.getBearerToken();
+            let url: string = this.backendUrl + "/summaries";
+            if (_filter?.month != null || _filter?.year != null) {
+                url += "?";
+                let queryStr: string = "";
+                if (_filter?.year != null) {
+                    queryStr += `year=${_filter?.year}`;
+                }
+                if (_filter?.month != null) {
+                    queryStr += `${queryStr.length > 0 ? "&" : ""}month=${_filter?.month}`;
+                }
+                url += queryStr;
+            }
+            const request: Request = new Request(url);
             if (bearerToken) {
                 request.headers.set("Authorization", "Bearer " + bearerToken);
             }
@@ -274,6 +393,14 @@ export class AIPDataSource implements DataSource {
 }
 
 export class DataSourceService {
+    public static async loadBills(source: DataSource, filter?: IBillFilter): Promise<BillDTO[]> {
+        return source.loadBills(filter);
+    }
+
+    public static async addBill(bill: BillDTO, source: DataSource) {
+        source.addBill(bill);
+    }
+
     public static async loadReceipts(source: DataSource, filter?: IReceiptFilter): Promise<ReceiptDTO[]> {
         return source.loadReceipts(filter);
     }
@@ -286,7 +413,7 @@ export class DataSourceService {
         return source.loadSources();
     }
 
-    public static async loadMonthSummaries(source: DataSource): Promise<MonthSummaryDTO[]> {
-        return source.loadMonthSummaries();
+    public static async loadMonthSummaries(source: DataSource, filter?: IMonthSummaryFilter): Promise<MonthSummaryDTO[]> {
+        return source.loadMonthSummaries(filter);
     }
 }
