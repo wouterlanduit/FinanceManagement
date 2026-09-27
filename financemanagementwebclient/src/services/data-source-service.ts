@@ -14,6 +14,7 @@ export interface DataSource {
     addBill(receipt: BillDTO): Promise<boolean>;
     addReceipt(receipt: ReceiptDTO): Promise<boolean>;
     addSource(source: SourceDTO): Promise<boolean>;
+    recalculateMonthSummary(monthSummary: MonthSummaryDTO): Promise<boolean>;
 }
 
 export class DummyDataSource implements DataSource {
@@ -116,6 +117,11 @@ export class DummyDataSource implements DataSource {
         }
 
         return ret;
+    }
+
+    public async recalculateMonthSummary(monthSummary: MonthSummaryDTO): Promise<boolean> {
+        console.log(`recalculating ${monthSummary.month}/${monthSummary.year}`);
+        return true;
     }
 }
 
@@ -370,6 +376,12 @@ export class AIPDataSource implements DataSource {
         return [];
     }
 
+    public async recalculateMonthSummary(monthSummary: MonthSummaryDTO): Promise<boolean> {
+        // TODO: implement
+        console.log(`recalculating ${monthSummary.month}/${monthSummary.year}`);
+        return true;
+    }
+
     private async executeCreate(_body: string, _endpoint: string): Promise<boolean> {
         let ret: boolean = false;
         const bearerToken: string = await this.getBearerToken();
@@ -415,5 +427,9 @@ export class DataSourceService {
 
     public static async loadMonthSummaries(source: DataSource, filter?: IMonthSummaryFilter): Promise<MonthSummaryDTO[]> {
         return source.loadMonthSummaries(filter);
+    }
+
+    public static async recalculateMonthSummary(source: DataSource, summary: MonthSummaryDTO) {
+        source.recalculateMonthSummary(summary);
     }
 }

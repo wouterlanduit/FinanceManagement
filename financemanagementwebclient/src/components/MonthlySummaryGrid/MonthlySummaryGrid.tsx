@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { MonthSummaryDTO } from '../../models/month-summary-dto';
 import { type DataSource, DataSourceService }  from '../../services/data-source-service'
-import { createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, Toolbar, ToolbarButton, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
+import { Button, createTableColumn, Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow, Toolbar, ToolbarButton, useTableFeatures, useTableSort, type TableColumnDefinition, type TableColumnId } from '@fluentui/react-components';
 import type { IMonthSummaryFilter } from '../../models/types';
 
 export interface IMonthlySummaryGridProps {
@@ -10,7 +10,7 @@ export interface IMonthlySummaryGridProps {
     month?: number
 }
 
-const columns: TableColumnDefinition<MonthSummaryDTO>[] = [
+const allColumns: TableColumnDefinition<MonthSummaryDTO>[] = [
     createTableColumn<MonthSummaryDTO>({
         columnId: "year",
         compare: (a, b) => {
@@ -67,6 +67,14 @@ function MonthlySummaryGrid(props: IMonthlySummaryGridProps) {
     const [currentMonth, setCurrentMonth] = useState<number | undefined>(0);
     const [currentYear, setCurrentYear] = useState<number | undefined>(0);
 
+    const columns = allColumns.filter(columnDefinition => columnDefinition.columnId != "year" || props.year === null);
+    columns.unshift(createTableColumn<MonthSummaryDTO>({
+        columnId: "recalculate",
+        renderCell: (item) => {
+            return <Button onClick={() => RecalculateMonth(props.source, item)}>o</Button>;
+        }
+    }));
+
     const fetchData = async () => {
         try {
             setMonthSummaries(await FetchMonthSummaries(props.source, { month: props.month, year: props.year }));
@@ -104,7 +112,7 @@ function MonthlySummaryGrid(props: IMonthlySummaryGridProps) {
         [
             useTableSort({
                 defaultSortState: {
-                    sortColumn: "year",
+                    sortColumn: props.year === null ? "year" : "month",
                     sortDirection: "ascending"
                 }
             })
@@ -119,16 +127,15 @@ function MonthlySummaryGrid(props: IMonthlySummaryGridProps) {
     });
 
     const rows = sort(getRows());
+    if (monthSummaries != null && props.year != null) {
+        AddPlaceholderMonths(monthSummaries, props.year);
+    }
 
     return (
         <>
             <Toolbar>
                 <ToolbarButton aria-label="Refresh" onClick={triggerDataFetch}>Refresh</ToolbarButton>
             </Toolbar>
-
-            // TODO: hide year column if filtered
-            // TODO: add placeholder rows
-            // TODO: add button on row to recalculate
 
             {monthSummaries != null &&
                 <Table
@@ -168,6 +175,26 @@ function MonthlySummaryGrid(props: IMonthlySummaryGridProps) {
 
 async function FetchMonthSummaries(source: DataSource, filter: IMonthSummaryFilter): Promise<MonthSummaryDTO[]> {
     return await DataSourceService.loadMonthSummaries(source, filter);
+}
+
+function RecalculateMonth(source: DataSource, monthSummary: MonthSummaryDTO) {
+    return DataSourceService.recalculateMonthSummary(source, monthSummary);
+}
+
+function AddPlaceholderMonths(monthSummaries: MonthSummaryDTO[], year: number) {
+    const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const availableMonths: number[] = monthSummaries.map(value => value.month);
+
+    months.filter(value => { return availableMonths.indexOf(value) === -1 }).forEach(month => {
+        monthSummaries.push(
+            {
+                month: month,
+                year: year,
+                rent: 0,
+                total: 0
+            }
+        )
+    });
 }
 
 export default MonthlySummaryGrid;
